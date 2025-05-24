@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from cryptography.hazmat.primitives import padding
 
 from extension import cors
-from models import User, db, UserRoleAssociation, Role, SoftwareComponent
+from models import User, db, UserRoleAssociation, Role, SoftwareComponent, Application
 
 load_dotenv()
 
@@ -139,10 +139,21 @@ def get_user_pats():
         # 查询用户的所有PAT
         associations = UserRoleAssociation.query.filter_by(user_id=user_id).all()
 
+        # 获取相关的应用程序和组件信息
+        application_ids = [assoc.application_id for assoc in associations]
+        role_ids = [assoc.role_id for assoc in associations]
+
+        applications = {app.application_id: app.application_name for app in Application.query.filter(Application.application_id.in_(application_ids)).all()}
+        roles = Role.query.filter(Role.role_id.in_(role_ids)).all()
+        component_ids = [role.component_id for role in roles]
+        components = {comp.component_id: comp.component_name for comp in SoftwareComponent.query.filter(SoftwareComponent.component_id.in_(component_ids)).all()}
+
         # 构建返回结果
         result = [{
             "application_id": assoc.application_id,
+            "application_name": applications.get(assoc.application_id, "Unknown"),
             "role_id": assoc.role_id,
+            "component_name": components.get(next((role.component_id for role in roles if role.role_id == assoc.role_id), None), "Unknown"),
             "assoc_api_token": assoc.assoc_api_token,
             "assoc_expiry_date": assoc.assoc_expiry_date
         } for assoc in associations]

@@ -60,4 +60,17 @@ class Role(db.Model):
     def __repr__(self):
         return f'<Role {self.role_name}>'
 
+class Application(db.Model):
+    __tablename__ = 'application'
+
+    application_id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    organization_id = db.Column(db.String(36), db.ForeignKey('organization.organization_id'), nullable=False)
+    application_name = db.Column(db.String(100), nullable=False, unique=True)
+    application_creation_time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    application_created_by = db.Column(db.String(50), nullable=False)
+    application_desc = db.Column(db.String(255))
+
+    def __repr__(self):
+        return f'<Application {self.application_name}>'
+
  
