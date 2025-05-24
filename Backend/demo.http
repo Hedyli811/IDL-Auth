@@ -1,0 +1,26 @@
+
+### login
+POST http://localhost:5000/login
+Content-Type: application/json
+
+{
+  "username": "testapiuser",
+  "password": "U2FsdGVkX1873ggFsQtVYyCtv2+HqQyHkT1iriRXdRY="
+}
+
+### get list of component
+GET http://localhost:5000/user/components?user_id=be6cccdd-35e8-4742-a24e-dd313493a5c9
+
+
+### generate pat
+POST http://localhost:5000/generate-pat
+Content-Type: application/json
+
+{
+  "user_id": "be6cccdd-35e8-4742-a24e-dd313493a5c9",
+  "application_id": "72b6e92a-97ec-4a5b-9756-227f286a321d",
+  "role_id": "2a97d959-e7c9-49a6-bbce-cad598d2468b"
+}
+
+### get all pat for user
+GET http://localhost:5000/user/pats?user_id=be6cccdd-35e8-4742-a24e-dd313493a5c9
