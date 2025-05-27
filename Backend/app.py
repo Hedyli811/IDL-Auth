@@ -5,6 +5,7 @@ from cryptography.hazmat.backends import default_backend
 import os
 from dotenv import load_dotenv
 from cryptography.hazmat.primitives import padding
+import base64
 
 from extension import cors
 from models import User, db, UserRoleAssociation, Role, SoftwareComponent, Application
@@ -116,16 +117,20 @@ def generate_pat():
         padder = padding.PKCS7(algorithms.AES.block_size).padder()
         padded_data = padder.update(pat.encode()) + padder.finalize()
 
-        # 使用用户的salt作为密钥加密PAT
-        cipher = Cipher(algorithms.AES(key), modes.ECB(), backend=default_backend())
+        # 生成随机IV
+        iv = os.urandom(16)
+
+        # 使用用户的salt作为密钥和IV加密PAT
+        cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
         encryptor = cipher.encryptor()
         encrypted_pat = encryptor.update(padded_data) + encryptor.finalize()
 
-        # 存储加密后的PAT到数据库
-        association.assoc_api_token = encrypted_pat.hex()
+        # 将IV和加密后的PAT一起存储
+        encrypted_pat_with_iv = base64.b64encode(iv + encrypted_pat).decode('utf-8')
+        association.assoc_api_token = encrypted_pat_with_iv
         db.session.commit()
 
-        return jsonify({"pat": encrypted_pat.hex(), "expires_at": association.assoc_expiry_date}), 200
+        return jsonify({"pat": encrypted_pat_with_iv, "expires_at": association.assoc_expiry_date}), 200
     except Exception as e:
         return jsonify({"message": "Error generating PAT", "error": str(e)}), 500
 
