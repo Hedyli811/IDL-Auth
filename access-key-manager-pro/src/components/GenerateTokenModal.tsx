@@ -21,12 +21,14 @@ interface GenerateTokenModalProps {
   isOpen: boolean;
   onClose: () => void;
   onGenerate: (tokenData: Omit<Token, "id" | "createdAt" | "isActive">) => void;
+  fetchTokens: () => void;
 }
 
 export const GenerateTokenModal: React.FC<GenerateTokenModalProps> = ({
   isOpen,
   onClose,
   onGenerate,
+  fetchTokens,
 }) => {
   const [applications, setApplications] = useState([]);
   const [selectedApplication, setSelectedApplication] = useState("");
@@ -36,11 +38,18 @@ export const GenerateTokenModal: React.FC<GenerateTokenModalProps> = ({
     const fetchApplications = async () => {
       try {
         const user = JSON.parse(localStorage.getItem("user") || "{}");
-        const userId = user.user_id;
+        const userId = user.id;
+        const token = localStorage.getItem("token");
 
         const response = await fetch(
-          `http://localhost:5000/user/components?user_id=${userId}`
+          `http://localhost:5000/user/components?user_id=${userId}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+          }
         );
+
         if (!response.ok) {
           throw new Error("Failed to fetch applications");
         }
@@ -79,11 +88,12 @@ export const GenerateTokenModal: React.FC<GenerateTokenModalProps> = ({
         (app) => app.role_id === selectedApplication
       )?.application_id;
       const roleId = selectedApplication;
-
+      const token = localStorage.getItem("token"); 
       const response = await fetch("http://localhost:5000/generate-pat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           user_id: userId,
@@ -108,11 +118,10 @@ export const GenerateTokenModal: React.FC<GenerateTokenModalProps> = ({
             ?.component_name || selectedApplication,
         token: data.pat,
         expiresAt: data.expires_at, 
-      };
+      }; 
  
 
-      onGenerate(tokenData); 
-
+      onGenerate(tokenData);  
       toast({
         title: "Token Generated Successfully",
         description: `A new token for ${tokenData.name} has been created and is ready to use`,

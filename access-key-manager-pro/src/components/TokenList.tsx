@@ -20,7 +20,10 @@ interface TokenListProps {
   onTokensChange: () => Promise<void>;
 }
 
-export const TokenList: React.FC<TokenListProps> = ({ tokens, onTokensChange }) => {
+export const TokenList: React.FC<TokenListProps> = ({
+  tokens,
+  onTokensChange,
+}) => {
   const [visibleTokens, setVisibleTokens] = useState<Set<string>>(new Set());
 
   const toggleTokenVisibility = (tokenId: string) => {

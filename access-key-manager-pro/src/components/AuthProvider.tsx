@@ -1,10 +1,9 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
 interface User {
-  id: string;
-  username: string;
-  name: string;
-  role: string;
+  user_id: string; 
+  usersname: string; 
+  access_token: string;
 }
 
 interface AuthContextType {
@@ -49,14 +48,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       const userData = await response.json();
-      console.log(userData); // Debugging line
+
+      // 假设后端返回的数据中包含 access_token 和用户信息 
+      console.log(userData)
+      // 更新用户状态
       setUser({
-        id: userData.user_id,
-        username: userData.username,
-        name: userData.usersname,
-        role: userData.role,
+        id: userData.user_id, 
+        usersname: userData.usersname, 
+        access_token: userData.access_token,
       });
-      localStorage.setItem("user", JSON.stringify(userData));
+      console.log(user)
+
+      // 存储用户信息和JWT令牌
+      localStorage.setItem("user",  JSON.stringify(userData));
+      localStorage.setItem("token", userData.access_token);
+      console.log(localStorage.getItem("user"))
     } catch (error) {
       throw new Error("Login failed: " + error.message);
     }

@@ -22,9 +22,22 @@ export const TokenManager: React.FC = () => {
   const { user, logout } = useAuth();
   const [tokens, setTokens] = useState<Token[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
   const fetchTokens = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/user/pats?user_id=${user?.user_id}`);
+      const token = localStorage.getItem('token');  
+
+      console.log(localStorage.getItem("user"))
+      console.log(user)
+      const response = await fetch(`http://localhost:5000/user/pats?user_id=${user?.user_id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      if (response.status === 401) {
+        // 令牌无效或过期，重定向到登录页面
+        window.location.href = '/login';
+      }
       if (!response.ok) {
         throw new Error('Failed to fetch tokens');
       }
@@ -38,6 +51,7 @@ export const TokenManager: React.FC = () => {
       });
     }
   };
+
   useEffect(() => {
     
 
@@ -63,7 +77,7 @@ export const TokenManager: React.FC = () => {
               <h1 className="text-2xl font-bold text-gray-900">PAT Management</h1>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">Welcome, {user?.name}</span>
+              <span className="text-sm text-gray-600">Welcome, {user?.usersname}</span>
               <Button variant="outline" size="sm" onClick={logout}>
                 <LogOut className="w-4 h-4 mr-2" />
                 Sign out

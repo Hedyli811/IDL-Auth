@@ -1,3 +1,4 @@
+@token= Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc0ODQ1NzcxOSwianRpIjoiZDc4N2Q5NDEtMTQzMy00ZWQ4LWExMTUtMzFiYmFjNDcxNmQzIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6ImJlNmNjY2RkLTM1ZTgtNDc0Mi1hMjRlLWRkMzEzNDkzYTVjOSIsIm5iZiI6MTc0ODQ1NzcxOSwiY3NyZiI6IjMzYmMxM2E5LTJhNjgtNGQ5OC04MmVmLTMzNWE2MzVlNjU3OCIsImV4cCI6MTc0ODQ1ODYxOX0.Prl965BZbzNd8CnZSkACUZGUGbieMam4Jkc2y3m3_Fw
 
 ### login
 POST http://localhost:5000/login
@@ -5,16 +6,20 @@ Content-Type: application/json
 
 {
   "username": "testapiuser",
-  "password": "U2FsdGVkX1873ggFsQtVYyCtv2+HqQyHkT1iriRXdRY="
+  "password": "b040mAs20QaJwZN3kHrNBQ=="
 }
 
 ### get list of component
-GET http://localhost:5000/user/components?user_id=be6cccdd-35e8-4742-a24e-dd313493a5c9
+GET http://localhost:5000/user/components
+Authorization: {{token}}
+
+
 
 
 ### generate pat
 POST http://localhost:5000/generate-pat
 Content-Type: application/json
+Authorization: {{token}}
 
 {
   "user_id": "be6cccdd-35e8-4742-a24e-dd313493a5c9",
@@ -24,3 +29,4 @@ Content-Type: application/json
 
 ### get all pat for user
 GET http://localhost:5000/user/pats?user_id=be6cccdd-35e8-4742-a24e-dd313493a5c9
+Authorization: {{token}}

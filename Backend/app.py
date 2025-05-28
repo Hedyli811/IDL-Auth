@@ -6,6 +6,7 @@ import os
 from dotenv import load_dotenv
 from cryptography.hazmat.primitives import padding
 import base64
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 
 from extension import cors
 from models import User, db, UserRoleAssociation, Role, SoftwareComponent, Application
@@ -15,6 +16,8 @@ load_dotenv()
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')  # 更改为你的密钥
+jwt = JWTManager(app)
 db.init_app(app)
 cors.init_app(app)
 
@@ -31,15 +34,17 @@ def login():
     user = User.query.filter_by(user_username=username).first()
 
     if user and user.user_password == password:
-        # 登录成功
-        return jsonify({"message": "Login successful", "user_id": user.user_id, "usersname": user.user_name}), 200
+        # 登录成功，生成JWT令牌
+        access_token = create_access_token(identity=user.user_id)
+        return jsonify({"message": "Login successful", "user_id": user.user_id, "usersname": user.user_name,"access_token": access_token}), 200
     else:
         # 登录失败
-        return jsonify({"message": "Invalid username or password "  }), 401
+        return jsonify({"message": "Invalid username or password"}), 401
 
 @app.route('/user/components', methods=['GET'])
-def get_user_components():
-    user_id = request.args.get('user_id')
+@jwt_required()
+def get_user_components(): 
+    user_id = get_jwt_identity()
     if not user_id:
         return jsonify({"message": "User ID is required"}), 400
 
@@ -77,6 +82,7 @@ def get_user_components():
         return jsonify({"message": "Error fetching components", "error": str(e)}), 500
 
 @app.route('/generate-pat', methods=['POST'])
+@jwt_required()
 def generate_pat():
     data = request.json
     user_id = data.get('user_id')
@@ -135,6 +141,7 @@ def generate_pat():
         return jsonify({"message": "Error generating PAT", "error": str(e)}), 500
 
 @app.route('/user/pats', methods=['GET'])
+@jwt_required()
 def get_user_pats():
     user_id = request.args.get('user_id')
     if not user_id:
