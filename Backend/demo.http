@@ -5,8 +5,8 @@ POST http://localhost:5000/login
 Content-Type: application/json
 
 {
-  "username": "testapiuser",
-  "password": "b040mAs20QaJwZN3kHrNBQ=="
+  "username": "taher",
+  "password": "idl1"
 }
 
 ### get list of component

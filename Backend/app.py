@@ -9,36 +9,101 @@ import base64
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 
 from extension import cors
-from models import User, db, UserRoleAssociation, Role, SoftwareComponent, Application
+from models import User, db, UserRoleAssociation, Role, SoftwareComponent, Application, UserKey
 
 load_dotenv()
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')  # 更改为你的密钥
+
+app.config['SQLALCHEMY_BINDS'] = {
+    'user': os.getenv('USER_DATABASE_URL')
+}
+
+app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')  
 jwt = JWTManager(app)
 db.init_app(app)
 cors.init_app(app)
+
+def decrypt_password(encrypted_password, key, iv):
+    try:
+        # 解码base64编码的key和iv
+        key = base64.b64decode(key)
+        iv = base64.b64decode(iv)
+
+        # 创建解密器
+        cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
+        decryptor = cipher.decryptor()
+
+        # 解密密码
+        decrypted_padded_password = decryptor.update(base64.b64decode(encrypted_password)) + decryptor.finalize()
+
+        # 移除填充
+        unpadder = padding.PKCS7(algorithms.AES.block_size).unpadder()
+        decrypted_password = unpadder.update(decrypted_padded_password) + unpadder.finalize()
+
+        return decrypted_password.decode('utf-8')
+    except Exception as e:
+        # 处理解密错误
+        return "Decryption operation failed! Invalid IV or/and Key."
+
+def encrypt_password(plain_password, key, iv):
+    # 解码base64编码的key和iv
+    key = base64.b64decode(key)
+    iv = base64.b64decode(iv)
+
+    # 创建加密器
+    cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
+    encryptor = cipher.encryptor()
+
+    # 使用PKCS#7填充
+    padder = padding.PKCS7(algorithms.AES.block_size).padder()
+    padded_data = padder.update(plain_password.encode()) + padder.finalize()
+
+    # 加密密码
+    encrypted_password = encryptor.update(padded_data) + encryptor.finalize()
+
+    # 返回base64编码的加密密码
+    return base64.b64encode(encrypted_password).decode('utf-8')
 
 @app.route('/login', methods=['POST'])
 def login():
     data = request.json
     username = data.get('username')
-    password = data.get('password')
+    plain_password = data.get('password')
 
-    if not username or not password:
+    if not username or not plain_password:
         return jsonify({"message": "Username and password are required"}), 400
 
-    # 查找用户
+    # Find the user
     user = User.query.filter_by(user_username=username).first()
 
-    if user and user.user_password == password:
-        # 登录成功，生成JWT令牌
-        access_token = create_access_token(identity=user.user_id)
-        return jsonify({"message": "Login successful", "user_id": user.user_id, "usersname": user.user_name,"access_token": access_token}), 200
+    if user:
+        # Join with the key table from another database
+        user_key = UserKey.query.filter_by(key_id=user.user_salt).first()
+        if not user_key:
+            return jsonify({"message": "User key not found"}), 404
+
+        # Split key_data into IV and KEY
+        key_data = user_key.key_data.split(',')
+        if len(key_data) != 2:
+            return jsonify({"message": "Invalid key data format"}), 500
+
+        iv, key = key_data
+
+        # Encrypt the user's input password
+        encrypted_password = encrypt_password(plain_password, key, iv)
+
+        if encrypted_password == user.user_password:
+            # Login successful, generate JWT token
+            access_token = create_access_token(identity=user.user_id)
+            return jsonify({"message": "Login successful", "user_id": user.user_id, "usersname": user.user_name, "access_token": access_token}), 200
+        else:
+            # Login failed
+            return jsonify({"message": "Invalid username or password"}), 401
     else:
-        # 登录失败
+        # User not found
         return jsonify({"message": "Invalid username or password"}), 401
 
 @app.route('/user/components', methods=['GET'])
@@ -49,26 +114,26 @@ def get_user_components():
         return jsonify({"message": "User ID is required"}), 400
 
     try:
-        # 获取当前用户的角色，且assoc_expiry_date不早于今天
+        # Get the user's roles, and assoc_expiry_date is not earlier than today
         today = datetime.utcnow().date()
         associations = UserRoleAssociation.query.filter(
             UserRoleAssociation.user_id == user_id,
             # UserRoleAssociation.assoc_expiry_date >= today
         ).all()
 
-        # 获取用户可以访问的所有component id
+        # Get all component ids the user can access
         role_ids = [assoc.role_id for assoc in associations]
         application_ids = [assoc.application_id for assoc in associations]
         roles = Role.query.filter(Role.role_id.in_(role_ids)).all()
         component_ids = [role.component_id for role in roles]
 
-        # 获取component name，只返回component_has_api为true的
+        # Get component names, only return those with component_has_api as true
         components = SoftwareComponent.query.filter(
             SoftwareComponent.component_id.in_(component_ids),
             SoftwareComponent.component_has_api == True
         ).all()
 
-        # 构建返回结果
+        # Build the return result
         result = [{
             "component_id": component.component_id,
             "component_name": component.component_name,
@@ -93,7 +158,7 @@ def generate_pat():
         return jsonify({"message": "User ID, Application ID, and Role ID are required"}), 400
 
     try:
-        # 验证用户是否有权访问指定的component
+        # Verify if the user has access to the specified component
         today = datetime.utcnow().date()
         association = UserRoleAssociation.query.filter_by(
             user_id=user_id,
@@ -104,34 +169,34 @@ def generate_pat():
         if not association:
             return jsonify({"message": "Invalid access or expired association"}), 403
 
-        # 获取用户的salt作为密钥
+        # Get the user's salt as the key
         user = User.query.filter_by(user_id=user_id).first()
         if not user or not user.user_salt:
             return jsonify({"message": "User salt not found"}), 404
 
-        # 确保密钥长度为16字节
+        # Ensure the key length is 16 bytes
         key = user.user_salt.encode()
         if len(key) < 16:
             key = key.ljust(16, b'\0')  # 使用空字节填充
         else:
             key = key[:16]  # 截取前16字节
 
-        # 生成PAT
+        # Generate PAT
         pat = f"{user_id},{application_id},{role_id}"
 
-        # 使用PKCS#7填充数据
+        # Use PKCS#7 to pad the data
         padder = padding.PKCS7(algorithms.AES.block_size).padder()
         padded_data = padder.update(pat.encode()) + padder.finalize()
 
-        # 生成随机IV
+        # Generate random IV
         iv = os.urandom(16)
 
-        # 使用用户的salt作为密钥和IV加密PAT
+        # Encrypt PAT using the user's salt as the key and IV
         cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
         encryptor = cipher.encryptor()
         encrypted_pat = encryptor.update(padded_data) + encryptor.finalize()
 
-        # 将IV和加密后的PAT一起存储
+        # Store the IV and encrypted PAT together
         encrypted_pat_with_iv = base64.b64encode(iv + encrypted_pat).decode('utf-8')
         association.assoc_api_token = encrypted_pat_with_iv
         db.session.commit()
@@ -148,10 +213,10 @@ def get_user_pats():
         return jsonify({"message": "User ID is required"}), 400
 
     try:
-        # 查询用户的所有PAT
+        # Query all PATs of the user
         associations = UserRoleAssociation.query.filter_by(user_id=user_id).all()
 
-        # 获取相关的应用程序和组件信息
+        # Get related application and component information
         application_ids = [assoc.application_id for assoc in associations]
         role_ids = [assoc.role_id for assoc in associations]
 
@@ -160,7 +225,7 @@ def get_user_pats():
         component_ids = [role.component_id for role in roles]
         components = {comp.component_id: comp.component_name for comp in SoftwareComponent.query.filter(SoftwareComponent.component_id.in_(component_ids)).all()}
 
-        # 构建返回结果
+        # Build the return result
         result = [{
             "application_id": assoc.application_id,
             "application_name": applications.get(assoc.application_id, "Unknown"),
@@ -173,6 +238,16 @@ def get_user_pats():
         return jsonify(result), 200
     except Exception as e:
         return jsonify({"message": "Error fetching PATs", "error": str(e)}), 500
+
+# 提供的IV和KEY
+iv = "97LN/mDMvbSKwj1T1pTnfw=="
+key = "OQyvBJF74dvmzfi1JYg0ulqF15Uc7/bZZDvGwh0qYGU="
+encrypted_password = "M1NVKyE0fVv6OMr7zAF9tQ=="
+
+# 解密
+decrypted_password = decrypt_password(encrypted_password, key, iv)
+print("Decrypted password:", decrypted_password)
+
 
 if __name__ == '__main__':
     app.run(debug=True)

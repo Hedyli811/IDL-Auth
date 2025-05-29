@@ -3,7 +3,15 @@ from datetime import datetime
 import uuid
 
 db = SQLAlchemy()
+userdb = SQLAlchemy()
 
+class UserKey(db.Model):
+    __bind_key__ = 'user'
+    __tablename__ = 'key_vault'
+
+    key_id = db.Column(db.Text, primary_key=True)
+    key_data = db.Column(db.Text)
+ 
 class User(db.Model):
     __tablename__ = 'users'
 
