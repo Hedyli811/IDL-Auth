@@ -29,7 +29,7 @@ export const TokenManager: React.FC = () => {
 
       console.log(localStorage.getItem("user"))
       console.log(user)
-      const response = await fetch(`http://localhost:5000/user/pats?user_id=${user?.user_id}`, {
+      const response = await fetch(`http://localhost:5000/user/pats?user_id=${user?.id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },

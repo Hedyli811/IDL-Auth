@@ -240,9 +240,9 @@ def get_user_pats():
         return jsonify({"message": "Error fetching PATs", "error": str(e)}), 500
 
 # 提供的IV和KEY
-iv = "97LN/mDMvbSKwj1T1pTnfw=="
-key = "OQyvBJF74dvmzfi1JYg0ulqF15Uc7/bZZDvGwh0qYGU="
-encrypted_password = "M1NVKyE0fVv6OMr7zAF9tQ=="
+iv = "dMiwubYfUrdb0Mn539BZXw=="
+key = "1GBy755bP5nhjc6QWwjD8HGvPKDXGeiIuS5zbTjQipk="
+encrypted_password = "W89lFB6TPKTe0iV5IOP3cA=="
 
 # 解密
 decrypted_password = decrypt_password(encrypted_password, key, iv)
