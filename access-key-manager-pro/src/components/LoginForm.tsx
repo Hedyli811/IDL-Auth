@@ -31,7 +31,7 @@ export const LoginForm: React.FC = () => {
     } catch (error) {
       toast({
         title: "Login failed",
-        description: "Invalid credentials. Try admin@company.com / admin123",
+        description: "Invalid credentials.",
         variant: "destructive",
       });
     } finally {

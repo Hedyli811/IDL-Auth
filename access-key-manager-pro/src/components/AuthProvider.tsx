@@ -53,7 +53,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.log(userData)
       // 更新用户状态
       setUser({
-        id: userData.user_id, 
+        user_id: userData.user_id, 
         usersname: userData.usersname, 
         access_token: userData.access_token,
       });

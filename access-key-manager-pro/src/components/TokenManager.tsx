@@ -7,15 +7,14 @@ import { GenerateTokenModal } from './GenerateTokenModal';
 import { Plus, LogOut, Key } from 'lucide-react';
 import { toast } from "@/hooks/use-toast";
 
-export interface Token {
-  id: string;
-  name: string;
-  application: string;
-  token: string;
-  createdAt: string;
-  expiresAt: string;
-  isActive: boolean;
-  lastUsed?: string;
+export interface Token { 
+
+  application_id: string;
+  assoc_api_token: string;
+  assoc_expiry_date: string;
+  role_id: string;
+  application_name: string;
+  component_name: string;
 }
 
 export const TokenManager: React.FC = () => {
@@ -29,19 +28,19 @@ export const TokenManager: React.FC = () => {
 
       console.log(localStorage.getItem("user"))
       console.log(user)
-      const response = await fetch(`http://localhost:5000/user/pats?user_id=${user?.id}`, {
+      const response = await fetch(`http://localhost:5000/user/pats?user_id=${user?.user_id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
       });
       if (response.status === 401) {
-        // 令牌无效或过期，重定向到登录页面
-        window.location.href = '/login';
+        logout();
       }
       if (!response.ok) {
         throw new Error('Failed to fetch tokens');
       }
       const data = await response.json();
+      console.log(data)
       setTokens(data);
     } catch (error) {
       toast({
@@ -115,6 +114,7 @@ export const TokenManager: React.FC = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onGenerate={handleGenerateToken}
+        fetchTokens={fetchTokens}
       />
     </div>
   );
