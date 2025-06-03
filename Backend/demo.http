@@ -1,11 +1,10 @@
-@token= Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc0ODQ1NzcxOSwianRpIjoiZDc4N2Q5NDEtMTQzMy00ZWQ4LWExMTUtMzFiYmFjNDcxNmQzIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6ImJlNmNjY2RkLTM1ZTgtNDc0Mi1hMjRlLWRkMzEzNDkzYTVjOSIsIm5iZiI6MTc0ODQ1NzcxOSwiY3NyZiI6IjMzYmMxM2E5LTJhNjgtNGQ5OC04MmVmLTMzNWE2MzVlNjU3OCIsImV4cCI6MTc0ODQ1ODYxOX0.Prl965BZbzNd8CnZSkACUZGUGbieMam4Jkc2y3m3_Fw
-
+@token= Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc0ODk2MTY1NywianRpIjoiNjIxYTI3OGItOGRiNi00NTA1LWE2MmQtNTg5MzZiNTRlNWZlIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IjE2NTk0NmFlLTE0MzQtNDY3My1iZWZjLTVhZmRkYTMzODc0NiIsIm5iZiI6MTc0ODk2MTY1NywiY3NyZiI6ImYzOGViNDU3LWVjNGYtNGY0NC1hOTMwLWI4ODY5NzRhNDdjMCIsImV4cCI6MTc0ODk2MjU1N30.v-2Z8i8ks0EC1VSFLkC74x1mzrZQVV2CgcCznFk57Qc
 ### login
 POST http://localhost:5000/login
 Content-Type: application/json
 
 {
-  "username": "testapiuser",
+  "username": "testapiuser1",
   "password": "idl1"
 }
 
@@ -28,5 +27,5 @@ Authorization: {{token}}
 }
 
 ### get all pat for user
-GET http://localhost:5000/user/pats?user_id=be6cccdd-35e8-4742-a24e-dd313493a5c9
+GET http://localhost:5000/user/pats?user_id=165946ae-1434-4673-befc-5afdda338746
 Authorization: {{token}}
