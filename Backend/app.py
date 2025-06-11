@@ -264,6 +264,46 @@ def decrypt_pat(encrypted_pat, key, iv):
         # Handle decryption errors
         return "Decryption operation failed! Invalid IV or/and Key."+str(e)
 
+@app.route('/decrypt-pat', methods=['POST'])
+@jwt_required()
+def decrypt_pat_api():
+    data = request.json
+    username = data.get('username')
+    encrypted_pat = data.get('pat')
+
+    if not username or not encrypted_pat:
+        return jsonify({"message": "Username and PAT are required"}), 400
+
+    try:
+        # Find the user
+        user = User.query.filter_by(user_username=username).first()
+        if not user or not user.user_salt:
+            return jsonify({"message": "User not found or user salt missing"}), 404
+
+        # Retrieve the user's key data
+        user_key = UserKey.query.filter_by(key_id=user.user_salt).first()
+        if not user_key:
+            return jsonify({"message": "User key not found"}), 404
+
+        key_data = user_key.key_data.split(',')
+        if len(key_data) != 2:
+            return jsonify({"message": "Invalid key data format"}), 500
+
+        iv, key = key_data
+
+        # Decrypt the PAT
+        decrypted_pat = decrypt_pat(encrypted_pat, key, iv)
+        if "Decryption operation failed" in decrypted_pat:
+            return jsonify({"message": "Decryption failed", "error": decrypted_pat}), 500
+
+        # Return the decrypted information
+        return jsonify({"decrypted_info": decrypted_pat}), 200
+    except Exception as e:
+        return jsonify({"message": "Error decrypting PAT", "error": str(e)}), 500
+
+print(decrypt_pat("WLAcbHpl7kygG5nGZ0iZlGELhs/eH4ZIlZPhgmlmG25kFiPzvpqiC2ULyxlAT99A+ReFjmaGcrhT5TMMZUs5U4SePNdZmYliQ9hsjv2jS8rrwcrIZl2vEVR7vsn79q89jWHc6jl6SQWzysIV8y0tjqrj0jP8EI7VNtk0ta59VAiTpz8INFEKuSMkFySi0JBvBjyKQCGUpGk8SOPvi3+VjaVxEYX/SaWRRtUf0G+Ux7E=", "29m6wMU4sMMIFwEiMkQcxgSNQDic2c/nCgqKaSUDcQU=", "vYeUCDeebSzE9yWaFNN1Pw=="))
+print(decrypt_pat("l9EjqE42faSnYqbH3q3lUpumJfhxPd1H1XNNSXS2blUGYNk/82B3xphQ5Diex0EDjjICLPy4gYuL1lUcCHSUnW+IObH0fOgUEaFqWagSqJYVBST3ATfoH+L4qVJT4wMfQndr/+AWyQnkLRveAibcILwMTcl2Pff41b1D8u13FfDJbu9ktnlk9uuV9eC22ya+AQH7eQ+EQOzlvzZR1uORajTOo/mL83+UO0wXqjlrxps=", "CrwTLO1dxsHCC+srmwsjWwiwxtAq7me8F0o7H1i6nz4=", "t3NnCpnDsv7sl3c1f5f7Vw=="))
+print(decrypt_pat("iha9/sadpqA6C1wuPKA5KggYvMvcID+CvpsMJMvxwr7PJF5vO7aM0Ntjjc1d/5aE+CjLJIjdF0GmHR828SRdApmnFJTk/m9gKBYPKYZyas8WoOwIQVLes2W3hMmYBpm2GiWyuyLs8AE4xlRhfrBzoBSx2ZeyCSuwe47wuIYvS3FFALMorbi8iPmMw1T1+hHv6ed4phC1+0Gpse6RfXctiCpfGQI8New1urpnPxyGmj4=", "1GBy755bP5nhjc6QWwjD8HGvPKDXGeiIuS5zbTjQipk=", "dMiwubYfUrdb0Mn539BZXw=="))
 
 if __name__ == '__main__':
     app.run(debug=True)

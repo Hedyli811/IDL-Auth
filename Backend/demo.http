@@ -1,4 +1,4 @@
-@token= Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc0ODk2MTY1NywianRpIjoiNjIxYTI3OGItOGRiNi00NTA1LWE2MmQtNTg5MzZiNTRlNWZlIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IjE2NTk0NmFlLTE0MzQtNDY3My1iZWZjLTVhZmRkYTMzODc0NiIsIm5iZiI6MTc0ODk2MTY1NywiY3NyZiI6ImYzOGViNDU3LWVjNGYtNGY0NC1hOTMwLWI4ODY5NzRhNDdjMCIsImV4cCI6MTc0ODk2MjU1N30.v-2Z8i8ks0EC1VSFLkC74x1mzrZQVV2CgcCznFk57Qc
+@token= Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc0OTY3MjE2OSwianRpIjoiMDgzOWZlMjgtNmU2Zi00NmJhLTk4MGMtYThmNTk3YWRiM2FjIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IjE2NTk0NmFlLTE0MzQtNDY3My1iZWZjLTVhZmRkYTMzODc0NiIsIm5iZiI6MTc0OTY3MjE2OSwiY3NyZiI6ImM0ZTFlZTYzLTBiZjUtNGU3Ny05YTNiLWFhMzE5ZDJjOTI2NyIsImV4cCI6MTc0OTY3MzA2OX0.COeWpvO518E2GnJ_Pt_XmwvVDugvg9Tw9Cks32QEg6w
 ### login
 POST http://localhost:5000/login
 Content-Type: application/json
@@ -29,3 +29,14 @@ Authorization: {{token}}
 ### get all pat for user
 GET http://localhost:5000/user/pats?user_id=165946ae-1434-4673-befc-5afdda338746
 Authorization: {{token}}
+
+### decrypt pat
+POST http://localhost:5000/decrypt-pat
+Content-Type: application/json
+Authorization: {{token}}
+
+{
+  "username": "testapiuser1",
+  "pat": "l9EjqE42faSnYqbH3q3lUpumJfhxPd1H1XNNSXS2blUGYNk/82B3xphQ5Diex0EDjjICLPy4gYuL1lUcCHSUnW+IObH0fOgUEaFqWagSqJYVBST3ATfoH+L4qVJT4wMfQndr/+AWyQnkLRveAibcILwMTcl2Pff41b1D8u13FfDJbu9ktnlk9uuV9eC22ya+AQH7eQ+EQOzlvzZR1uORajTOo/mL83+UO0wXqjlrxps="
+}
+
