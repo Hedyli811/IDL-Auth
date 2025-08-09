@@ -272,34 +272,113 @@ def decrypt_pat_api():
     encrypted_pat = data.get('pat')
 
     if not username or not encrypted_pat:
-        return jsonify({"message": "Username and PAT are required"}), 400
+        return jsonify({
+            "valid": False,
+            "msg": "Username and PAT are required",
+            "data": {}
+        }), 400
 
     try:
-        # Find the user
+        # 1. 获取用户和密钥信息
         user = User.query.filter_by(user_username=username).first()
         if not user or not user.user_salt:
-            return jsonify({"message": "User not found or user salt missing"}), 404
+            return jsonify({
+                "valid": False,
+                "msg": "User not found or user salt missing",
+                "data": {}
+            }), 404
 
-        # Retrieve the user's key data
         user_key = UserKey.query.filter_by(key_id=user.user_salt).first()
         if not user_key:
-            return jsonify({"message": "User key not found"}), 404
+            return jsonify({
+                "valid": False,
+                "msg": "User key not found",
+                "data": {}
+            }), 404
 
+        # 2. 解密 PAT
         key_data = user_key.key_data.split(',')
         if len(key_data) != 2:
-            return jsonify({"message": "Invalid key data format"}), 500
+            return jsonify({
+                "valid": False,
+                "msg": "Invalid key data format",
+                "data": {}
+            }), 500
 
         iv, key = key_data
-
-        # Decrypt the PAT
         decrypted_pat = decrypt_pat(encrypted_pat, key, iv)
+        
         if "Decryption operation failed" in decrypted_pat:
-            return jsonify({"message": "Decryption failed", "error": decrypted_pat}), 500
+            return jsonify({
+                "valid": False,
+                "msg": "Decryption failed",
+                "data": {}
+            }), 500
 
-        # Return the decrypted information
-        return jsonify({"decrypted_info": decrypted_pat}), 200
+        # 3. 解析解密后的数据 - 关键修改：去除所有空格
+        try:
+            pat_parts = decrypted_pat.split(',')
+            if len(pat_parts) != 4:
+                return jsonify({
+                    "valid": False,
+                    "msg": "Invalid PAT format",
+                    "data": {}
+                }), 400
+
+            # 去除所有空格
+            user_id = pat_parts[0].strip()
+            application_id = pat_parts[1].strip()
+            role_id = pat_parts[2].strip()
+            time_created = pat_parts[3].strip() 
+                
+        except ValueError:
+            return jsonify({
+                "valid": False,
+                "msg": "Invalid PAT data format",
+                "data": {}
+            }), 400
+
+        # 4. 验证用户存在性
+        target_user = User.query.filter_by(user_id=user_id).first()
+        if not target_user:
+            return jsonify({
+                "valid": False,
+                "msg": "User ID not found in database",
+                "data": {}
+            }), 404
+
+        # 5. 验证访问权限
+        association = UserRoleAssociation.query.filter_by(
+            user_id=user_id,
+            application_id=application_id,
+            role_id=role_id
+        ).first()
+
+        if not association:
+            return jsonify({
+                "valid": False,
+                "msg": "User does not have access rights to the target application with the specified role",
+                "data": {}
+            }), 403
+
+        # 6. 返回成功响应
+        return jsonify({
+            "valid": True,
+            "msg": "success",
+            "data": {
+                "user_id": user_id,
+                "application_id": application_id,
+                "role_id": role_id,
+                "time_created": time_created
+            }
+        }), 200
+
     except Exception as e:
-        return jsonify({"message": "Error decrypting PAT", "error": str(e)}), 500
+        return jsonify({
+            "valid": False,
+            "msg": f"Error processing request: {str(e)}",
+            "data": {}
+        }), 500
 
 print(decrypt_pat("WLAcbHpl7kygG5nGZ0iZlGELhs/eH4ZIlZPhgmlmG25kFiPzvpqiC2ULyxlAT99A+ReFjmaGcrhT5TMMZUs5U4SePNdZmYliQ9hsjv2jS8rrwcrIZl2vEVR7vsn79q89jWHc6jl6SQWzysIV8y0tjqrj0jP8EI7VNtk0ta59VAiTpz8INFEKuSMkFySi0JBvBjyKQCGUpGk8SOPvi3+VjaVxEYX/SaWRRtUf0G+Ux7E=", "29m6wMU4sMMIFwEiMkQcxgSNQDic2c/nCgqKaSUDcQU=", "vYeUCDeebSzE9yWaFNN1Pw=="))
 print(decrypt_pat("l9EjqE42faSnYqbH3q3lUpumJfhxPd1H1XNNSXS2blUGYNk/82B3xphQ5Diex0EDjjICLPy4gYuL1lUcCHSUnW+IObH0fOgUEaFqWagSqJYVBST3ATfoH+L4qVJT4wMfQndr/+AWyQnkLRveAibcILwMTcl2Pff41b1D8u13FfDJbu9ktnlk9uuV9eC22ya+AQH7eQ+EQOzlvzZR1uORajTOo/mL83+UO0wXqjlrxps=", "CrwTLO1dxsHCC+srmwsjWwiwxtAq7me8F0o7H1i6nz4=", "t3NnCpnDsv7sl3c1f5f7Vw=="))
