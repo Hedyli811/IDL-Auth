@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
 interface User {
-  user_id: string; 
-  usersname: string; 
+  user_id: string;
+  usersname: string;
   access_token: string;
 }
 
@@ -35,7 +35,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (username: string, password: string) => {
     try {
-      const response = await fetch("http://localhost:5000/login", {
+      const response = await fetch("/api/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -49,20 +49,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       const userData = await response.json();
 
-      // 假设后端返回的数据中包含 access_token 和用户信息 
-      console.log(userData)
+      // 假设后端返回的数据中包含 access_token 和用户信息
+      console.log(userData);
       // 更新用户状态
       setUser({
-        user_id: userData.user_id, 
-        usersname: userData.usersname, 
+        user_id: userData.user_id,
+        usersname: userData.usersname,
         access_token: userData.access_token,
       });
-      console.log(user)
+      console.log(user);
 
       // 存储用户信息和JWT令牌
-      localStorage.setItem("user",  JSON.stringify(userData));
+      localStorage.setItem("user", JSON.stringify(userData));
       localStorage.setItem("token", userData.access_token);
-      console.log(localStorage.getItem("user"))
+      console.log(localStorage.getItem("user"));
     } catch (error) {
       throw new Error("Login failed: " + error.message);
     }

@@ -1,14 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from './AuthProvider';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { TokenList } from './TokenList';
-import { GenerateTokenModal } from './GenerateTokenModal';
-import { Plus, LogOut, Key } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { useAuth } from "./AuthProvider";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { TokenList } from "./TokenList";
+import { GenerateTokenModal } from "./GenerateTokenModal";
+import { Plus, LogOut, Key } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
-export interface Token { 
-
+export interface Token {
   application_id: string;
   assoc_api_token: string;
   assoc_expiry_date: string;
@@ -24,23 +29,23 @@ export const TokenManager: React.FC = () => {
 
   const fetchTokens = async () => {
     try {
-      const token = localStorage.getItem('token');  
+      const token = localStorage.getItem("token");
 
-      console.log(localStorage.getItem("user"))
-      console.log(user)
-      const response = await fetch(`http://localhost:5000/user/pats?user_id=${user?.user_id}`, {
+      console.log(localStorage.getItem("user"));
+      console.log(user);
+      const response = await fetch(`/api/user/pats?user_id=${user?.user_id}`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
       if (response.status === 401) {
         logout();
       }
       if (!response.ok) {
-        throw new Error('Failed to fetch tokens');
+        throw new Error("Failed to fetch tokens");
       }
       const data = await response.json();
-      console.log(data)
+      console.log(data);
       setTokens(data);
     } catch (error) {
       toast({
@@ -52,8 +57,6 @@ export const TokenManager: React.FC = () => {
   };
 
   useEffect(() => {
-    
-
     fetchTokens();
   }, [user]);
 
@@ -73,10 +76,14 @@ export const TokenManager: React.FC = () => {
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                 <Key className="w-5 h-5 text-white" />
               </div>
-              <h1 className="text-2xl font-bold text-gray-900">PAT Management</h1>
+              <h1 className="text-2xl font-bold text-gray-900">
+                PAT Management
+              </h1>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">Welcome, {user?.usersname}</span>
+              <span className="text-sm text-gray-600">
+                Welcome, {user?.usersname}
+              </span>
               <Button variant="outline" size="sm" onClick={logout}>
                 <LogOut className="w-4 h-4 mr-2" />
                 Sign out
@@ -95,10 +102,14 @@ export const TokenManager: React.FC = () => {
               <div>
                 <CardTitle>Personal Access Tokens</CardTitle>
                 <CardDescription>
-                  Manage your access tokens for different applications and services
+                  Manage your access tokens for different applications and
+                  services
                 </CardDescription>
               </div>
-              <Button onClick={() => setIsModalOpen(true)} className="bg-blue-600 hover:bg-blue-700">
+              <Button
+                onClick={() => setIsModalOpen(true)}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
                 <Plus className="w-4 h-4 mr-2" />
                 Generate New Token
               </Button>

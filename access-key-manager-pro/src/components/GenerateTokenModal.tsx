@@ -15,7 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { toast } from "@/hooks/use-toast"; 
+import { toast } from "@/hooks/use-toast";
 
 interface GenerateTokenModalProps {
   isOpen: boolean;
@@ -41,14 +41,11 @@ export const GenerateTokenModal: React.FC<GenerateTokenModalProps> = ({
         const userId = user.id;
         const token = localStorage.getItem("token");
 
-        const response = await fetch(
-          `http://localhost:5000/user/components?user_id=${userId}`,
-          {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-            },
-          }
-        );
+        const response = await fetch(`/api/user/components?user_id=${userId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         if (!response.ok) {
           throw new Error("Failed to fetch applications");
@@ -88,12 +85,12 @@ export const GenerateTokenModal: React.FC<GenerateTokenModalProps> = ({
         (app) => app.role_id === selectedApplication
       )?.application_id;
       const roleId = selectedApplication;
-      const token = localStorage.getItem("token"); 
-      const response = await fetch("http://localhost:5000/generate-pat", {
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/generate-pat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           user_id: userId,
@@ -105,10 +102,9 @@ export const GenerateTokenModal: React.FC<GenerateTokenModalProps> = ({
       if (!response.ok) {
         throw new Error("Failed to generate token");
       }
- 
 
       const data = await response.json();
-  
+
       const tokenData = {
         name:
           applications.find((app) => app.role_id === selectedApplication)
@@ -117,11 +113,10 @@ export const GenerateTokenModal: React.FC<GenerateTokenModalProps> = ({
           applications.find((app) => app.role_id === selectedApplication)
             ?.component_name || selectedApplication,
         token: data.pat,
-        expiresAt: data.expires_at, 
-      }; 
- 
+        expiresAt: data.expires_at,
+      };
 
-      onGenerate(tokenData);  
+      onGenerate(tokenData);
       toast({
         title: "Token Generated Successfully",
         description: `A new token for ${tokenData.name} has been created and is ready to use`,
@@ -199,4 +194,3 @@ export const GenerateTokenModal: React.FC<GenerateTokenModalProps> = ({
     </Dialog>
   );
 };
- 
