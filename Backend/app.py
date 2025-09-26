@@ -80,6 +80,8 @@ def login():
     user = User.query.filter_by(user_username=username).first()
 
     if user:
+        if user.user_is_disabled:
+            return jsonify({"message": "User is disabled"}), 403
         # Join with the key table from another database
         user_key = UserKey.query.filter_by(key_id=user.user_salt).first()
         if not user_key:
@@ -118,7 +120,7 @@ def get_user_components():
         today = datetime.utcnow().date()
         associations = UserRoleAssociation.query.filter(
             UserRoleAssociation.user_id == user_id,
-            # UserRoleAssociation.assoc_expiry_date >= today
+            UserRoleAssociation.assoc_expiry_date >= today
         ).all()
 
         # Get all component ids the user can access
@@ -133,14 +135,21 @@ def get_user_components():
             SoftwareComponent.component_has_api == True
         ).all()
 
-        # Build the return result
-        result = [{
-            "component_id": component.component_id,
-            "component_name": component.component_name,
-            "component_desc": component.component_desc,
-            "role_id": assoc.role_id,
-            "application_id": assoc.application_id
-        } for assoc in associations for component in components if component.component_id in component_ids]
+        # Use a set to keep track of seen component_ids
+        seen_component_ids = set()
+        result = []
+
+        for assoc in associations:
+            for component in components:
+                if component.component_id in component_ids and component.component_id not in seen_component_ids:
+                    seen_component_ids.add(component.component_id)
+                    result.append({
+                        "component_id": component.component_id,
+                        "component_name": component.component_name,
+                        "component_desc": component.component_desc,
+                        "role_id": assoc.role_id,
+                        "application_id": assoc.application_id
+                    })
 
         return jsonify(result), 200
     except Exception as e:
