@@ -31,8 +31,6 @@ export const TokenManager: React.FC = () => {
     try {
       const token = localStorage.getItem("token");
 
-      console.log(localStorage.getItem("user"));
-      console.log(user);
       const response = await fetch(`/api/user/pats?user_id=${user?.user_id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -45,7 +43,6 @@ export const TokenManager: React.FC = () => {
         throw new Error("Failed to fetch tokens");
       }
       const data = await response.json();
-      console.log(data);
       setTokens(data);
     } catch (error) {
       toast({

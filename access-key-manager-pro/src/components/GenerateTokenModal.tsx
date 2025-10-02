@@ -28,10 +28,9 @@ export const GenerateTokenModal: React.FC<GenerateTokenModalProps> = ({
   isOpen,
   onClose,
   onGenerate,
-  fetchTokens,
 }) => {
   const [applications, setApplications] = useState([]);
-  const [selectedApplication, setSelectedApplication] = useState("");
+  const [selectedComponentId, setSelectedComponentId] = useState(""); // 存储唯一的 component_id
   const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
@@ -40,13 +39,11 @@ export const GenerateTokenModal: React.FC<GenerateTokenModalProps> = ({
         const user = JSON.parse(localStorage.getItem("user") || "{}");
         const userId = user.id;
         const token = localStorage.getItem("token");
-
         const response = await fetch(`/api/user/components?user_id=${userId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-
         if (!response.ok) {
           throw new Error("Failed to fetch applications");
         }
@@ -60,14 +57,18 @@ export const GenerateTokenModal: React.FC<GenerateTokenModalProps> = ({
         });
       }
     };
-
     fetchApplications();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!selectedApplication) {
+    // 根据 selectedComponentId 找到完整的应用程序对象
+    const selectedApp = applications.find(
+      (app) => app.component_id === selectedComponentId
+    );
+
+    if (!selectedApp) {
       toast({
         title: "Validation Error",
         description: "Please select an application",
@@ -81,11 +82,11 @@ export const GenerateTokenModal: React.FC<GenerateTokenModalProps> = ({
     try {
       const user = JSON.parse(localStorage.getItem("user") || "{}");
       const userId = user.user_id;
-      const applicationId = applications.find(
-        (app) => app.role_id === selectedApplication
-      )?.application_id;
-      const roleId = selectedApplication;
+      // 从选中的应用程序对象中获取 application_id 和 role_id
+      const applicationId = selectedApp.application_id;
+      const roleId = selectedApp.role_id;
       const token = localStorage.getItem("token");
+
       const response = await fetch("/api/generate-pat", {
         method: "POST",
         headers: {
@@ -104,26 +105,23 @@ export const GenerateTokenModal: React.FC<GenerateTokenModalProps> = ({
       }
 
       const data = await response.json();
-
       const tokenData = {
-        name:
-          applications.find((app) => app.role_id === selectedApplication)
-            ?.component_name || selectedApplication,
-        application:
-          applications.find((app) => app.role_id === selectedApplication)
-            ?.component_name || selectedApplication,
-        token: data.pat,
-        expiresAt: data.expires_at,
+        application_id: applicationId,
+        assoc_api_token: data.pat,
+        assoc_expiry_date: data.expires_at,
+        role_id: roleId,
+        application_name: selectedApp.component_name || "",
+        component_name: selectedApp.component_name || "",
       };
 
       onGenerate(tokenData);
       toast({
         title: "Token Generated Successfully",
-        description: `A new token for ${tokenData.name} has been created and is ready to use`,
+        description: `A new token for ${tokenData.component_name} has been created and is ready to use`,
       });
 
       // Reset form
-      setSelectedApplication("");
+      setSelectedComponentId(""); // 重置选中的 component_id
     } catch (error) {
       toast({
         title: "Generation Failed",
@@ -144,12 +142,11 @@ export const GenerateTokenModal: React.FC<GenerateTokenModalProps> = ({
             Create a new token to access your applications programmatically.
           </DialogDescription>
         </DialogHeader>
-
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Select
-              value={selectedApplication}
-              onValueChange={setSelectedApplication}
+              value={selectedComponentId} // 绑定到唯一的 component_id
+              onValueChange={setSelectedComponentId} // 更新 selectedComponentId
               required
             >
               <SelectTrigger>
@@ -157,7 +154,9 @@ export const GenerateTokenModal: React.FC<GenerateTokenModalProps> = ({
               </SelectTrigger>
               <SelectContent>
                 {applications.map((app) => (
-                  <SelectItem key={app.component_id} value={app.role_id}>
+                  <SelectItem key={app.component_id} value={app.component_id}>
+                    {" "}
+                    {/* 使用唯一的 component_id 作为 value */}
                     <div>
                       <div className="font-medium">{app.component_name}</div>
                       <div className="text-sm text-gray-500">
@@ -169,21 +168,19 @@ export const GenerateTokenModal: React.FC<GenerateTokenModalProps> = ({
               </SelectContent>
             </Select>
           </div>
-
           {/* <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
             <p className="text-sm text-yellow-800">
               <strong>Security Notice:</strong> Store this token securely. It
               won't be shown again after creation.
             </p>
           </div> */}
-
           <div className="flex justify-end space-x-3 pt-4">
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
             <Button
               type="submit"
-              disabled={isGenerating}
+              disabled={isGenerating || !selectedComponentId} // 可以在没有选择时禁用按钮
               className="bg-blue-600 hover:bg-blue-700"
             >
               {isGenerating ? "Generating..." : "Generate Token"}

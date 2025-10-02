@@ -50,19 +50,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const userData = await response.json();
 
       // 假设后端返回的数据中包含 access_token 和用户信息
-      console.log(userData);
       // 更新用户状态
       setUser({
         user_id: userData.user_id,
         usersname: userData.usersname,
         access_token: userData.access_token,
       });
-      console.log(user);
 
       // 存储用户信息和JWT令牌
       localStorage.setItem("user", JSON.stringify(userData));
       localStorage.setItem("token", userData.access_token);
-      console.log(localStorage.getItem("user"));
     } catch (error) {
       throw new Error("Login failed: " + error.message);
     }

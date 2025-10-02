@@ -125,30 +125,32 @@ def get_user_components():
 
         # Get all component ids the user can access
         role_ids = [assoc.role_id for assoc in associations]
-        application_ids = [assoc.application_id for assoc in associations]
         roles = Role.query.filter(Role.role_id.in_(role_ids)).all()
         component_ids = [role.component_id for role in roles]
 
-        # Get component names, only return those with component_has_api as true
-        components = SoftwareComponent.query.filter(
-            SoftwareComponent.component_id.in_(component_ids),
-            SoftwareComponent.component_has_api == True
-        ).all()
-
-        # Use a set to keep track of seen component_ids
-        seen_component_ids = set()
+        # 获取所有符合条件的 SoftwareComponent 对象，它们必须在 component_ids 中且 component_has_api 为 True
+        valid_components = {
+            c.component_id: c
+            for c in SoftwareComponent.query.filter(
+                SoftwareComponent.component_id.in_(component_ids),
+                SoftwareComponent.component_has_api == True
+            ).all()
+        }
         result = []
-
         for assoc in associations:
-            for component in components:
-                if component.component_id in component_ids and component.component_id not in seen_component_ids:
-                    seen_component_ids.add(component.component_id)
+            # 找到当前 assoc 对应的 role
+            related_role = next((r for r in roles if r.role_id == assoc.role_id), None)
+            if related_role:
+                component_id_from_role = related_role.component_id
+                # 检查这个 component_id 是否在 valid_components 中 (即它有API)
+                if component_id_from_role in valid_components:
+                    component = valid_components[component_id_from_role]
                     result.append({
                         "component_id": component.component_id,
                         "component_name": component.component_name,
                         "component_desc": component.component_desc,
-                        "role_id": assoc.role_id,
-                        "application_id": assoc.application_id
+                        "role_id": assoc.role_id, # 从当前 assoc 获取
+                        "application_id": assoc.application_id # 从当前 assoc 获取
                     })
 
         return jsonify(result), 200
@@ -168,7 +170,6 @@ def generate_pat():
 
     try:
         # Verify if the user has access to the specified component
-        today = datetime.utcnow().date()
         association = UserRoleAssociation.query.filter_by(
             user_id=user_id,
             application_id=application_id,

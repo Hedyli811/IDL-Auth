@@ -2,18 +2,26 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Copy, Eye, EyeOff, Shield, AlertTriangle } from "lucide-react";
+import {
+  Copy,
+  Eye,
+  EyeOff,
+  Shield,
+  AlertTriangle,
+  ImportIcon,
+} from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { Token } from "./TokenManager";
 
-interface Token {
-  application_id: string;
-  assoc_api_token: string;
-  assoc_expiry_date: string;
-  role_id: string;
-  application_name: string;
-  component_name: string;
-}
+// interface Token {
+//   application_id: string;
+//   assoc_api_token: string;
+//   assoc_expiry_date: string;
+//   role_id: string;
+//   application_name: string;
+//   component_name: string;
+// }
 
 interface TokenListProps {
   tokens: Token[];
