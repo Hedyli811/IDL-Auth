@@ -74,7 +74,7 @@ export const TokenManager: React.FC = () => {
                 <Key className="w-5 h-5 text-white" />
               </div>
               <h1 className="text-2xl font-bold text-gray-900">
-                PAT Management
+                Access Token Management - IDL API
               </h1>
             </div>
             <div className="flex items-center space-x-4">

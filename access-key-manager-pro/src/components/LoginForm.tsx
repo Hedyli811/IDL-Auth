@@ -26,7 +26,8 @@ export const LoginForm: React.FC = () => {
       await login(username, password);
       toast({
         title: "Login successful",
-        description: "Welcome to the PAT Management System",
+        description:
+          "Welcome to the Access Token Management system for IDL API  ",
       });
     } catch (error) {
       toast({
@@ -47,7 +48,10 @@ export const LoginForm: React.FC = () => {
             <Lock className="w-6 h-6 text-white" />
           </div>
           <CardTitle className="text-2xl font-bold text-gray-900">
-            PAT Management System
+            IDL API
+          </CardTitle>
+          <CardTitle className="text-xl font-bold text-gray-900">
+            Access Token Management
           </CardTitle>
           <CardDescription className="text-gray-600">
             Sign in to manage your Personal Access Tokens
