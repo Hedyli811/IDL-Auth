@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from datetime import datetime
+from datetime import datetime, timedelta
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
 import os
@@ -221,6 +221,7 @@ def generate_pat():
 @app.route('/user/pats', methods=['GET'])
 @jwt_required()
 def get_user_pats():
+    global expiry_date_display
     user_id = request.args.get('user_id')
     if not user_id:
         return jsonify({"message": "User ID is required"}), 400
@@ -239,14 +240,26 @@ def get_user_pats():
         components = {comp.component_id: comp.component_name for comp in SoftwareComponent.query.filter(SoftwareComponent.component_id.in_(component_ids)).all()}
 
         # Build the return result
-        result = [{
+        result = []
+        for assoc in associations:
+            creation_date_only = assoc.assoc_creation_time.date() if hasattr(assoc.assoc_creation_time, 'date') else assoc.assoc_creation_time
+            expiry_date_only = assoc.assoc_expiry_date.date() if hasattr(assoc.assoc_expiry_date, 'date') else assoc.assoc_expiry_date
+
+            expiry_date_display = ""
+            if creation_date_only == expiry_date_only:
+                expiry_date_display = "Permanent Valid"
+            else:
+                expiry_date_display = assoc.assoc_expiry_date + timedelta(days=1)
+
+        result.append({
             "application_id": assoc.application_id,
             "application_name": applications.get(assoc.application_id, "Unknown"),
             "role_id": assoc.role_id,
-            "component_name": components.get(next((role.component_id for role in roles if role.role_id == assoc.role_id), None), "Unknown"),
+            "component_name": components.get(
+                next((role.component_id for role in roles if role.role_id == assoc.role_id), None), "Unknown"),
             "assoc_api_token": assoc.assoc_api_token,
-            "assoc_expiry_date": assoc.assoc_expiry_date
-        } for assoc in associations]
+            "assoc_expiry_date": expiry_date_display
+        })
 
         return jsonify(result), 200
     except Exception as e:
@@ -275,7 +288,6 @@ def decrypt_pat(encrypted_pat, key, iv):
         return "Decryption operation failed! Invalid IV or/and Key."+str(e)
 
 @app.route('/decrypt-pat', methods=['POST'])
-@jwt_required()
 def decrypt_pat_api():
     data = request.json
     username = data.get('username')

@@ -162,9 +162,13 @@ export const TokenList: React.FC<TokenListProps> = ({
                     <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
                       <div>
                         <span className="font-medium">Expires:</span>{" "}
-                        {format(
-                          new Date(token.assoc_expiry_date),
-                          "MMM dd, yyyy"
+                        {token.assoc_expiry_date === "Permanent Valid" ? (
+                          <span>Permanent Valid</span>
+                        ) : (
+                          format(
+                            new Date(token.assoc_expiry_date),
+                            "MMM dd, yyyy"
+                          )
                         )}
                       </div>
                     </div>

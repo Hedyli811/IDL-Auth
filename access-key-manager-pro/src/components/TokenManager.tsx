@@ -31,11 +31,14 @@ export const TokenManager: React.FC = () => {
     try {
       const token = localStorage.getItem("token");
 
-      const response = await fetch(`/api/user/pats?user_id=${user?.user_id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        `http://localhost:5000/user/pats?user_id=${user?.user_id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       if (response.status === 401) {
         logout();
       }
