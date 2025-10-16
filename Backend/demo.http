@@ -1,4 +1,4 @@
-@token= Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc2MDQ5ODM4NCwianRpIjoiZjM3YWZhMjYtMjMxMS00NTgxLTlhMjQtYTIwZjNmOWQyN2E0IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IjE2NTk0NmFlLTE0MzQtNDY3My1iZWZjLTVhZmRkYTMzODc0NiIsIm5iZiI6MTc2MDQ5ODM4NCwiY3NyZiI6IjYwZjZjMGJjLWZlMjAtNGE4Mi05NDVkLTY0ZGE4MzNmYTAzMyIsImV4cCI6MTc2MDQ5OTI4NH0.NOPmbFt3yWA6j-877ZiII7XbF81L4w3GAUbwNOcZHqQ
+@token= Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc2MDU3NTM1MSwianRpIjoiMTBlYjkwZmItODI3Mi00NzhjLWEzMzUtMDkxMTlhY2Q5YmEwIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IjE2NTk0NmFlLTE0MzQtNDY3My1iZWZjLTVhZmRkYTMzODc0NiIsIm5iZiI6MTc2MDU3NTM1MSwiY3NyZiI6IjNhODE3N2RlLTRkZTAtNGI4OC04MGIwLTJhYmIwMmU0ZDYyYSIsImV4cCI6MTc2MDU3NjI1MX0.eXUqTF9t1Gv0wJXk_YsXR69VAkeHP0OqS3zf8mbeyTs
 ### login
 POST http://localhost:5000/login
 Content-Type: application/json
@@ -13,8 +13,15 @@ GET http://localhost:5000/user/components
 Authorization: {{token}}
 
 
+### change password
+POST http://localhost:5000/change-password
+Content-Type: application/json
+Authorization: {{token}}
 
-
+{
+  "old_password": "idl1",
+  "new_password": "idl123abc"
+}
 ### generate pat
 POST http://localhost:5000/generate-pat
 Content-Type: application/json

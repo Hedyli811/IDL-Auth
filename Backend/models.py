@@ -27,6 +27,7 @@ class User(db.Model):
     user_created_by = db.Column(db.String(50))
     user_is_super_admin = db.Column(db.Boolean, nullable=False, default=False)
     user_is_disabled = db.Column(db.Boolean, nullable=False, default=False)
+    user_password_change_date = db.Column(db.Date)
 
     def __repr__(self):
         return f'<User {self.user_username}>'

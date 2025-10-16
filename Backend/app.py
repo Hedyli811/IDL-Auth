@@ -98,6 +98,10 @@ def login():
         encrypted_password = encrypt_password(plain_password, key, iv)
 
         if encrypted_password == user.user_password:
+            # check if user needs to change new password
+            if user.user_password_change_date and user.user_password_change_date <= datetime.utcnow().date():
+                return jsonify({"message": "Password change required", "user_id": user.user_id}), 403  # 或者 401，并附带一个标识
+
             # Login successful, generate JWT token
             access_token = create_access_token(identity=user.user_id)
             return jsonify({"message": "Login successful", "user_id": user.user_id, "usersname": user.user_name, "access_token": access_token,"IV": iv, "KEY": key}), 200
@@ -107,6 +111,55 @@ def login():
     else:
         # User not found
         return jsonify({"message": "Invalid username or password"}), 401
+
+
+@app.route('/change-password', methods=['POST'])
+@jwt_required()
+def change_password():
+    data = request.json
+    old_password = data.get('old_password')
+    new_password = data.get('new_password')
+
+    if not old_password or not new_password:
+        return jsonify({"message": "Old password and new password are required"}), 400
+
+    current_user_id = get_jwt_identity() # 获取当前登录用户的 ID
+
+    user = User.query.get(current_user_id)
+    if not user:
+        return jsonify({"message": "User not found"}), 404
+
+    # 1. 验证旧密码
+    user_key = UserKey.query.filter_by(key_id=user.user_salt).first()
+    if not user_key:
+        return jsonify({"message": "User key not found"}), 500 # 或者更具体的错误信息
+
+    key_data = user_key.key_data.split(',')
+    if len(key_data) != 2:
+        return jsonify({"message": "Invalid key data format"}), 500
+    iv, key = key_data
+
+    encrypted_old_password = encrypt_password(old_password, key, iv)
+
+    if encrypted_old_password != user.user_password:
+        return jsonify({"message": "Invalid old password"}), 401
+
+    # 2. 加密新密码
+    encrypted_new_password = encrypt_password(new_password, key, iv)
+
+    # 3. 更新用户密码
+    user.user_password = encrypted_new_password
+
+    # 4. 更新 user_password_change_date 到六个月后
+    from datetime import datetime, timedelta
+    user.user_password_change_date = datetime.utcnow() + timedelta(days=180) # 假设180天为六个月
+
+    try:
+        db.session.commit() # 提交数据库更改
+        return jsonify({"message": "Password changed successfully"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"message": "Error changing password", "error": str(e)}), 500
 
 @app.route('/user/components', methods=['GET'])
 @jwt_required()
