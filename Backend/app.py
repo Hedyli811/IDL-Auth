@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from datetime import datetime, timedelta, UTC
+from datetime import datetime, timedelta
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
 import os
@@ -155,7 +155,7 @@ def change_password():
 
     # 4. 更新 user_password_change_date 到六个月后
     from datetime import datetime, timedelta
-    user.user_password_change_date = datetime.now(UTC) + timedelta(days=180) # 假设180天为六个月
+    user.user_password_change_date = datetime.now() + timedelta(days=180) # 假设180天为六个月
 
     try:
         db.session.commit() # 提交数据库更改
@@ -253,7 +253,8 @@ def generate_pat():
     
 
         # Generate PAT with current timestamp
-        current_time = datetime.utcnow().isoformat()
+        current_time = datetime.utcnow().i
+        soformat()
         pat = f"{user_id},{application_id},{role_id},{current_time}"
 
         # Use PKCS#7 to pad the data
