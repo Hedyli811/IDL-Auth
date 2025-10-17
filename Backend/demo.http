@@ -1,11 +1,12 @@
-@token= Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc2MDU3NTM1MSwianRpIjoiMTBlYjkwZmItODI3Mi00NzhjLWEzMzUtMDkxMTlhY2Q5YmEwIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IjE2NTk0NmFlLTE0MzQtNDY3My1iZWZjLTVhZmRkYTMzODc0NiIsIm5iZiI6MTc2MDU3NTM1MSwiY3NyZiI6IjNhODE3N2RlLTRkZTAtNGI4OC04MGIwLTJhYmIwMmU0ZDYyYSIsImV4cCI6MTc2MDU3NjI1MX0.eXUqTF9t1Gv0wJXk_YsXR69VAkeHP0OqS3zf8mbeyTs
+@token= Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc2MDcyOTY1MCwianRpIjoiMjYyNTI2NmMtNWMwYS00ZjczLTkwMDMtZTBlZjYxOTlkOGMxIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6ImJlNmNjY2RkLTM1ZTgtNDc0Mi1hMjRlLWRkMzEzNDkzYTVjOSIsIm5iZiI6MTc2MDcyOTY1MCwiY3NyZiI6ImNlYjE0MTQ0LTcxYWUtNDU1NC1iMmQzLWJiODQ1NmI5YTUyMCIsImV4cCI6MTc2MDczMDU1MH0.RCQxeE-j96sOIs0iQPJfbM0dlv5RFZnyVjEH7yUA70Y
+
 ### login
 POST http://localhost:5000/login
 Content-Type: application/json
 
 {
-  "username": "testapiuser1",
-  "password": "idl1"
+  "username": "testapiuser",
+  "password": "idl123abc"
 }
 
 ### get list of component
@@ -19,7 +20,7 @@ Content-Type: application/json
 Authorization: {{token}}
 
 {
-  "old_password": "idl1",
+  "old_password": "idl123abc",
   "new_password": "idl123abc"
 }
 ### generate pat

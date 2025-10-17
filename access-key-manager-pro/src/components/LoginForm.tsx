@@ -24,11 +24,11 @@ export const LoginForm: React.FC = () => {
 
     try {
       await login(username, password);
-      toast({
-        title: "Login successful",
-        description:
-          "Welcome to the Access Token Management system for IDL API  ",
-      });
+      // toast({
+      //   title: "Login successful",
+      //   description:
+      //     "Welcome to the Access Token Management system for IDL API  ",
+      // });
     } catch (error) {
       toast({
         title: "Login failed",

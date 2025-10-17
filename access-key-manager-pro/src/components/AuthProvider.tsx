@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 
 interface User {
   user_id: string;
@@ -31,16 +31,18 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(() => {
-    const savedUser = localStorage.getItem("user");
-    return savedUser ? JSON.parse(savedUser) : null;
-  });
+  const [user, setUser] = useState<User | null>(null);
+  const [needsPasswordChange, setNeedsPasswordChange] = useState<boolean>(false);
 
-  const [needsPasswordChange, setNeedsPasswordChange] = useState<boolean>(
-    () => {
-      return localStorage.getItem("needsPasswordChange") === "true";
-    }
-  );
+  // 应用启动时清理可能过期的认证状态
+  useEffect(() => {
+    // 清理localStorage中的认证信息，让用户重新登录以确保token是最新的
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    localStorage.removeItem("needsPasswordChange");
+    setUser(null);
+    setNeedsPasswordChange(false);
+  }, []);
 
   const login = async (username: string, password: string) => {
     try {
