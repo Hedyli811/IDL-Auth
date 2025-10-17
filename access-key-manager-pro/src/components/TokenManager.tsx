@@ -10,7 +10,8 @@ import {
 } from "@/components/ui/card";
 import { TokenList } from "./TokenList";
 import { GenerateTokenModal } from "./GenerateTokenModal";
-import { Plus, LogOut, Key } from "lucide-react";
+import { PasswordChangeForm } from "./PasswordChangeForm";
+import { Plus, LogOut, Key, Lock } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 export interface Token {
@@ -26,6 +27,7 @@ export const TokenManager: React.FC = () => {
   const { user, logout } = useAuth();
   const [tokens, setTokens] = useState<Token[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPasswordChangeModalOpen, setIsPasswordChangeModalOpen] = useState(false);
 
   const fetchTokens = async () => {
     try {
@@ -66,6 +68,14 @@ export const TokenManager: React.FC = () => {
     setIsModalOpen(false);
   };
 
+  const handlePasswordChanged = () => {
+    setIsPasswordChangeModalOpen(false);
+    toast({
+      title: "Password changed successfully",
+      description: "Your password has been updated successfully.",
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -84,6 +94,14 @@ export const TokenManager: React.FC = () => {
               <span className="text-sm text-gray-600">
                 Welcome, {user?.usersname}
               </span>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setIsPasswordChangeModalOpen(true)}
+              >
+                <Lock className="w-4 h-4 mr-2" />
+                Change Password
+              </Button>
               <Button variant="outline" size="sm" onClick={logout}>
                 <LogOut className="w-4 h-4 mr-2" />
                 Sign out
@@ -127,6 +145,28 @@ export const TokenManager: React.FC = () => {
         onGenerate={handleGenerateToken}
         fetchTokens={fetchTokens}
       />
+
+      {/* Password Change Modal */}
+      {isPasswordChangeModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <PasswordChangeForm
+              onPasswordChanged={handlePasswordChanged}
+              isRequired={false}
+              isModal={true}
+            />
+            <div className="p-4 border-t">
+              <Button
+                variant="outline"
+                onClick={() => setIsPasswordChangeModalOpen(false)}
+                className="w-full"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
