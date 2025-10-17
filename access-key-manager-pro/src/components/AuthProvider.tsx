@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useEffect,
+} from "react";
 
 interface User {
   user_id: string;
@@ -32,7 +38,8 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [needsPasswordChange, setNeedsPasswordChange] = useState<boolean>(false);
+  const [needsPasswordChange, setNeedsPasswordChange] =
+    useState<boolean>(false);
 
   // 应用启动时清理可能过期的认证状态
   useEffect(() => {
@@ -46,7 +53,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (username: string, password: string) => {
     try {
-      const response = await fetch("http://localhost:5000/login", {
+      const response = await fetch("/api/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -57,24 +64,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (response.status === 403) {
         // 需要修改密码 - 先获取用户信息
         const userData = await response.json();
-        
+
         // 设置用户状态，但标记需要修改密码
         setUser({
           user_id: userData.user_id,
           usersname: userData.usersname,
           access_token: userData.access_token || "", // 可能没有token
         });
-        
+
         // 存储用户信息
         localStorage.setItem("user", JSON.stringify(userData));
         if (userData.access_token) {
           localStorage.setItem("token", userData.access_token);
         }
-        
+
         // 设置需要修改密码的状态
         setNeedsPasswordChange(true);
         localStorage.setItem("needsPasswordChange", "true");
-        
+
         // 不抛出错误，让用户进入密码修改流程
         return;
       }
@@ -108,7 +115,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const changePassword = async (oldPassword: string, newPassword: string) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:5000/change-password", {
+      const response = await fetch("/api/change-password", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -39,14 +39,11 @@ export const GenerateTokenModal: React.FC<GenerateTokenModalProps> = ({
         const user = JSON.parse(localStorage.getItem("user") || "{}");
         const userId = user.id;
         const token = localStorage.getItem("token");
-        const response = await fetch(
-          `http://localhost:5000/user/components?user_id=${userId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response = await fetch(`/api/user/components?user_id=${userId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         if (!response.ok) {
           throw new Error("Failed to fetch applications");
         }
@@ -90,7 +87,7 @@ export const GenerateTokenModal: React.FC<GenerateTokenModalProps> = ({
       const roleId = selectedApp.role_id;
       const token = localStorage.getItem("token");
 
-      const response = await fetch("http://localhost:5000/generate-pat", {
+      const response = await fetch("/api/generate-pat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -27,20 +27,18 @@ export const TokenManager: React.FC = () => {
   const { user, logout } = useAuth();
   const [tokens, setTokens] = useState<Token[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isPasswordChangeModalOpen, setIsPasswordChangeModalOpen] = useState(false);
+  const [isPasswordChangeModalOpen, setIsPasswordChangeModalOpen] =
+    useState(false);
 
   const fetchTokens = async () => {
     try {
       const token = localStorage.getItem("token");
 
-      const response = await fetch(
-        `http://localhost:5000/user/pats?user_id=${user?.user_id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`/api/user/pats?user_id=${user?.user_id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       if (response.status === 401) {
         logout();
       }
@@ -94,9 +92,9 @@ export const TokenManager: React.FC = () => {
               <span className="text-sm text-gray-600">
                 Welcome, {user?.usersname}
               </span>
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setIsPasswordChangeModalOpen(true)}
               >
                 <Lock className="w-4 h-4 mr-2" />
