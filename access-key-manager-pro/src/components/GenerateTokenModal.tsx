@@ -39,7 +39,7 @@ export const GenerateTokenModal: React.FC<GenerateTokenModalProps> = ({
         const user = JSON.parse(localStorage.getItem("user") || "{}");
         const userId = user.id;
         const token = localStorage.getItem("token");
-        const response = await fetch(`/api/user/components?user_id=${userId}`, {
+        const response = await fetch(`/api/user/components`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -110,7 +110,7 @@ export const GenerateTokenModal: React.FC<GenerateTokenModalProps> = ({
         assoc_api_token: data.pat,
         assoc_expiry_date: data.expires_at,
         role_id: roleId,
-        application_name: selectedApp.component_name || "",
+        application_name: selectedApp.application_name || "",
         component_name: selectedApp.component_name || "",
       };
 
@@ -159,7 +159,8 @@ export const GenerateTokenModal: React.FC<GenerateTokenModalProps> = ({
                     {/* 使用唯一的 component_id 作为 value */}
                     <div>
                       <div className="font-medium">
-                        {app.component_name} - {app.application_name}{" "}
+                        <strong>{app.component_name}</strong> -{" "}
+                        {app.application_name}{" "}
                       </div>
                       <div className="text-sm text-gray-500">
                         {app.component_desc}

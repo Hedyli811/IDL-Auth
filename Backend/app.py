@@ -192,6 +192,13 @@ def get_user_components():
                 SoftwareComponent.component_has_api == True
             ).all()
         }
+
+        application_ids = [assoc.application_id for assoc in associations if assoc.application_id]
+        applications = {
+            app.application_id: app
+            for app in Application.query.filter(Application.application_id.in_(application_ids)).all()
+        }
+
         result = []
         for assoc in associations:
             # 找到当前 assoc 对应的 role
@@ -201,12 +208,19 @@ def get_user_components():
                 # 检查这个 component_id 是否在 valid_components 中 (即它有API)
                 if component_id_from_role in valid_components:
                     component = valid_components[component_id_from_role]
+
+                    application_name = None
+                    if assoc.application_id and assoc.application_id in applications:
+                        application_name = applications[assoc.application_id].application_name
+
                     result.append({
                         "component_id": component.component_id,
                         "component_name": component.component_name,
                         "component_desc": component.component_desc,
                         "role_id": assoc.role_id, # 从当前 assoc 获取
-                        "application_id": assoc.application_id # 从当前 assoc 获取
+                        "application_id": assoc.application_id, # 从当前 assoc 获取
+                        "application_name": application_name,
+
                     })
 
         return jsonify(result), 200
