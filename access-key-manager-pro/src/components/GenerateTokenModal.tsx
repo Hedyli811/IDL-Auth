@@ -158,12 +158,9 @@ export const GenerateTokenModal: React.FC<GenerateTokenModalProps> = ({
                     {" "}
                     {/* 使用唯一的 component_id 作为 value */}
                     <div>
-                      <div className="font-medium">
-                        <strong>{app.component_name}</strong> -{" "}
-                        {app.application_name}{" "}
-                      </div>
+                      <div className="font-medium">{app.application_name}</div>
                       <div className="text-sm text-gray-500">
-                        {app.component_desc}
+                        {app.component_name}
                       </div>
                     </div>
                   </SelectItem>
