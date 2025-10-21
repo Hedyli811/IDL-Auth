@@ -155,7 +155,6 @@ export const GenerateTokenModal: React.FC<GenerateTokenModalProps> = ({
               <SelectContent>
                 {applications.map((app) => (
                   <SelectItem key={app.component_id} value={app.component_id}>
-                    {" "}
                     {/* 使用唯一的 component_id 作为 value */}
                     <div>
                       <div className="font-medium">{app.application_name}</div>

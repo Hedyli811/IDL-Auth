@@ -267,8 +267,7 @@ def generate_pat():
     
 
         # Generate PAT with current timestamp
-        current_time = datetime.utcnow().i
-        soformat()
+        current_time = datetime.utcnow().isoformat()
         pat = f"{user_id},{application_id},{role_id},{current_time}"
 
         # Use PKCS#7 to pad the data
@@ -322,15 +321,15 @@ def get_user_pats():
             else:
                 expiry_date_display = assoc.assoc_expiry_date + timedelta(days=1)
 
-        result.append({
-            "application_id": assoc.application_id,
-            "application_name": applications.get(assoc.application_id, "Unknown"),
-            "role_id": assoc.role_id,
-            "component_name": components.get(
-                next((role.component_id for role in roles if role.role_id == assoc.role_id), None), "Unknown"),
-            "assoc_api_token": assoc.assoc_api_token,
-            "assoc_expiry_date": expiry_date_display
-        })
+            result.append({
+                "application_id": assoc.application_id,
+                "application_name": applications.get(assoc.application_id, "Unknown"),
+                "role_id": assoc.role_id,
+                "component_name": components.get(
+                    next((role.component_id for role in roles if role.role_id == assoc.role_id), None), "Unknown"),
+                "assoc_api_token": assoc.assoc_api_token,
+                "assoc_expiry_date": expiry_date_display
+            })
 
         return jsonify(result), 200
     except Exception as e:
