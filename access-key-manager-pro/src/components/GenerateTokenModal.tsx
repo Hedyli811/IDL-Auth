@@ -30,7 +30,8 @@ export const GenerateTokenModal: React.FC<GenerateTokenModalProps> = ({
   onGenerate,
 }) => {
   const [applications, setApplications] = useState([]);
-  const [selectedComponentId, setSelectedComponentId] = useState(""); // 存储唯一的 component_id
+  const [selectedApplicationId, setSelectedApplicationId] = useState("");
+  const [selectedRoleId, setSelectedRoleId] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
@@ -60,18 +61,35 @@ export const GenerateTokenModal: React.FC<GenerateTokenModalProps> = ({
     fetchApplications();
   }, []);
 
+  // 获取唯一的应用列表
+  const getUniqueApplications = () => {
+    const uniqueApps = new Map();
+    applications.forEach((app) => {
+      if (!uniqueApps.has(app.application_id)) {
+        uniqueApps.set(app.application_id, {
+          application_id: app.application_id,
+          application_name: app.application_name,
+        });
+      }
+    });
+    return Array.from(uniqueApps.values());
+  };
+
+  // 根据选中的应用获取组件列表
+  const getComponentsForApplication = () => {
+    if (!selectedApplicationId) return [];
+    return applications.filter(
+      (app) => app.application_id === selectedApplicationId
+    );
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // 根据 selectedComponentId 找到完整的应用程序对象
-    const selectedApp = applications.find(
-      (app) => app.component_id === selectedComponentId
-    );
-
-    if (!selectedApp) {
+    if (!selectedApplicationId || !selectedRoleId) {
       toast({
         title: "Validation Error",
-        description: "Please select an application",
+        description: "Please select both application and component",
         variant: "destructive",
       });
       return;
@@ -82,9 +100,6 @@ export const GenerateTokenModal: React.FC<GenerateTokenModalProps> = ({
     try {
       const user = JSON.parse(localStorage.getItem("user") || "{}");
       const userId = user.user_id;
-      // 从选中的应用程序对象中获取 application_id 和 role_id
-      const applicationId = selectedApp.application_id;
-      const roleId = selectedApp.role_id;
       const token = localStorage.getItem("token");
 
       const response = await fetch("/api/generate-pat", {
@@ -95,8 +110,8 @@ export const GenerateTokenModal: React.FC<GenerateTokenModalProps> = ({
         },
         body: JSON.stringify({
           user_id: userId,
-          application_id: applicationId,
-          role_id: roleId,
+          application_id: selectedApplicationId,
+          role_id: selectedRoleId,
         }),
       });
 
@@ -105,13 +120,21 @@ export const GenerateTokenModal: React.FC<GenerateTokenModalProps> = ({
       }
 
       const data = await response.json();
+
+      // 找到选中的组件信息
+      const selectedComponent = applications.find(
+        (app) =>
+          app.application_id === selectedApplicationId &&
+          app.role_id === selectedRoleId
+      );
+
       const tokenData = {
-        application_id: applicationId,
+        application_id: selectedApplicationId,
         assoc_api_token: data.pat,
         assoc_expiry_date: data.expires_at,
-        role_id: roleId,
-        application_name: selectedApp.application_name || "",
-        component_name: selectedApp.component_name || "",
+        role_id: selectedRoleId,
+        application_name: selectedComponent?.application_name || "",
+        component_name: selectedComponent?.component_name || "",
       };
 
       onGenerate(tokenData);
@@ -121,7 +144,8 @@ export const GenerateTokenModal: React.FC<GenerateTokenModalProps> = ({
       });
 
       // Reset form
-      setSelectedComponentId(""); // 重置选中的 component_id
+      setSelectedApplicationId("");
+      setSelectedRoleId("");
     } catch (error) {
       toast({
         title: "Generation Failed",
@@ -143,29 +167,64 @@ export const GenerateTokenModal: React.FC<GenerateTokenModalProps> = ({
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Select
-              value={selectedComponentId} // 绑定到唯一的 component_id
-              onValueChange={setSelectedComponentId} // 更新 selectedComponentId
-              required
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select an application" />
-              </SelectTrigger>
-              <SelectContent>
-                {applications.map((app) => (
-                  <SelectItem key={app.component_id} value={app.component_id}>
-                    {/* 使用唯一的 component_id 作为 value */}
-                    <div>
-                      <div className="font-medium">{app.application_name}</div>
-                      <div className="text-sm text-gray-500">
-                        {app.component_name}
-                      </div>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="space-y-4">
+            {/* Application Selection Dropdown */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Select Application</label>
+              <Select
+                value={selectedApplicationId}
+                onValueChange={(value) => {
+                  setSelectedApplicationId(value);
+                  setSelectedRoleId(""); // Reset component selection
+                }}
+                required
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select an application" />
+                </SelectTrigger>
+                <SelectContent>
+                  {getUniqueApplications().map((app) => (
+                    <SelectItem
+                      key={app.application_id}
+                      value={app.application_id}
+                    >
+                      {app.application_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Component Selection Dropdown */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Select Component</label>
+              <Select
+                value={selectedRoleId}
+                onValueChange={setSelectedRoleId}
+                disabled={!selectedApplicationId}
+                required
+              >
+                <SelectTrigger>
+                  <SelectValue
+                    placeholder={
+                      selectedApplicationId
+                        ? "Select a component"
+                        : "Please select an application first"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {getComponentsForApplication().map((component) => (
+                    <SelectItem
+                      key={component.role_id}
+                      value={component.role_id}
+                    >
+                      {component.component_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           {/* <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
             <p className="text-sm text-yellow-800">
@@ -179,7 +238,9 @@ export const GenerateTokenModal: React.FC<GenerateTokenModalProps> = ({
             </Button>
             <Button
               type="submit"
-              disabled={isGenerating || !selectedComponentId} // 可以在没有选择时禁用按钮
+              disabled={
+                isGenerating || !selectedApplicationId || !selectedRoleId
+              }
               className="bg-blue-600 hover:bg-blue-700"
             >
               {isGenerating ? "Generating..." : "Generate Token"}
