@@ -17,9 +17,33 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# 针对主要的 DATABASE_URL 设置连接池选项
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    "pool_size": 10,        # 连接池大小 (同时可用的最大连接数)
+    "max_overflow": 20,     # 当连接池满了，允许创建的额外连接数
+    "pool_recycle": 3600,   # 每 1 小时回收一次连接（3600秒）
+    "pool_timeout": 30,     # 获取连接的超时时间 (秒)
+    "pool_pre_ping": True   # 每次从池中获取连接时进行一次轻量级测试，以确保连接仍然有效。
+                            # 推荐设置为 True，可以更主动地发现失效连接。
+}
+
 app.config['SQLALCHEMY_BINDS'] = {
     'user': os.getenv('USER_DATABASE_URL')
 }
+
+# 如果 'user' 数据库也存在同样的问题，你需要为它也配置 engine options。
+# Flask-SQLAlchemy 允许你为每个 bind 配置 engine options。
+# 假设 'user' bind 也需要配置:
+app.config['SQLALCHEMY_BINDS_ENGINE_OPTIONS'] = {
+    'user': {
+        "pool_size": 10,
+        "max_overflow": 20,
+        "pool_recycle": 3600,
+        "pool_timeout": 30,
+        "pool_pre_ping": True
+    }
+}
+
 
 app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')  
 jwt = JWTManager(app)
