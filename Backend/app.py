@@ -125,7 +125,7 @@ def login():
             access_token = create_access_token(identity=user.user_id)
             # check if user needs to change new password
             if user.user_password_change_date and user.user_password_change_date <= datetime.utcnow().date():
-                return jsonify({"message": "Password change required", "user_id": user.user_id, "usersname": user.user_name,"access_token": access_token}), 403  # 或者 401，并附带一个标识
+                return jsonify({"message": "Password change required", "user_id": user.user_id, "usersname": user.user_name,"access_token": access_token}), 401  # 或者 401，并附带一个标识
 
             # Login successful, generate JWT token
 
@@ -463,6 +463,14 @@ def decrypt_pat_api():
                 "data": {}
             }), 404
 
+        # 4.5. 检查用户账号是否被禁用
+        if target_user.user_is_disabled:
+            return jsonify({
+                "valid": False,
+                "msg": "User account is disabled",
+                "data": {}
+            }), 403
+
         # 5. 验证访问权限
         association = UserRoleAssociation.query.filter_by(
             user_id=user_id,
@@ -474,6 +482,15 @@ def decrypt_pat_api():
             return jsonify({
                 "valid": False,
                 "msg": "User does not have access rights to the target application with the specified role",
+                "data": {}
+            }), 403
+
+        # 5.5. 检查 user_role_association 是否过期
+        today = datetime.utcnow().date()
+        if association.assoc_expiry_date and association.assoc_expiry_date < today:
+            return jsonify({
+                "valid": False,
+                "msg": "User role association has expired",
                 "data": {}
             }), 403
 

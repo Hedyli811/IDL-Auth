@@ -23,16 +23,20 @@ export const LoginForm: React.FC = () => {
     setIsLoading(true);
 
     try {
-      await login(username, password);
-      // toast({
-      //   title: "Login successful",
-      //   description:
-      //     "Welcome to the Access Token Management system for IDL API  ",
-      // });
+      const message = await login(username, password);
+      // Login successful, show success message
+      if (message) {
+        toast({
+          title: "Login successful",
+          description: message,
+        });
+      }
     } catch (error) {
+      // Login failed, show backend error message
+      const errorMessage = error instanceof Error ? error.message : "Login failed";
       toast({
         title: "Login failed",
-        description: "Invalid credentials.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

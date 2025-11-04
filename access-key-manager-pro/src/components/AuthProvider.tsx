@@ -14,7 +14,7 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (username: string, password: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<string | void>;
   logout: () => void;
   isAuthenticated: boolean;
   changePassword: (oldPassword: string, newPassword: string) => Promise<void>;
@@ -41,9 +41,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [needsPasswordChange, setNeedsPasswordChange] =
     useState<boolean>(false);
 
-  // 应用启动时清理可能过期的认证状态
+  // Clear potentially expired auth state on app startup
   useEffect(() => {
-    // 清理localStorage中的认证信息，让用户重新登录以确保token是最新的
+    // Clear auth info from localStorage to force re-login and ensure token is fresh
     localStorage.removeItem("user");
     localStorage.removeItem("token");
     localStorage.removeItem("needsPasswordChange");
@@ -61,54 +61,75 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         body: JSON.stringify({ username, password }),
       });
 
-      if (response.status === 403) {
-        // 需要修改密码 - 先获取用户信息
-        const userData = await response.json();
+      // Try to parse response data (may contain useful info regardless of success/failure)
+      let responseData;
+      try {
+        responseData = await response.json();
+      } catch {
+        responseData = {};
+      }
 
-        // 设置用户状态，但标记需要修改密码
+      // Handle 401 - Password change required
+      if (response.status === 401) {
+        // Set user state but mark that password change is needed
         setUser({
-          user_id: userData.user_id,
-          usersname: userData.usersname,
-          access_token: userData.access_token || "", // 可能没有token
+          user_id: responseData.user_id,
+          usersname: responseData.usersname,
+          access_token: responseData.access_token || "", // May not have token
         });
 
-        // 存储用户信息
-        localStorage.setItem("user", JSON.stringify(userData));
-        if (userData.access_token) {
-          localStorage.setItem("token", userData.access_token);
+        // Store user info
+        localStorage.setItem("user", JSON.stringify(responseData));
+        if (responseData.access_token) {
+          localStorage.setItem("token", responseData.access_token);
         }
 
-        // 设置需要修改密码的状态
+        // Set password change required state
         setNeedsPasswordChange(true);
         localStorage.setItem("needsPasswordChange", "true");
 
-        // 不抛出错误，让用户进入密码修改流程
-        return;
+        // Don't throw error, allow user to enter password change flow
+        // Return message to display to user
+        return responseData.message || "Password change required";
       }
 
+      // Handle 403 - User expired
+      if (response.status === 403) {
+        const errorMessage =
+          responseData.message || "Account expired or disabled";
+        throw new Error(errorMessage);
+      }
+
+      // Handle other error statuses
       if (!response.ok) {
-        throw new Error("Invalid credentials");
+        const errorMessage = responseData.message || "Login failed";
+        throw new Error(errorMessage);
       }
 
-      const userData = await response.json();
-
-      // 假设后端返回的数据中包含 access_token 和用户信息
-      // 更新用户状态
+      // Handle successful login (200)
+      // Update user state
       setUser({
-        user_id: userData.user_id,
-        usersname: userData.usersname,
-        access_token: userData.access_token,
+        user_id: responseData.user_id,
+        usersname: responseData.usersname,
+        access_token: responseData.access_token,
       });
 
-      // 存储用户信息和JWT令牌
-      localStorage.setItem("user", JSON.stringify(userData));
-      localStorage.setItem("token", userData.access_token);
+      // Store user info and JWT token
+      localStorage.setItem("user", JSON.stringify(responseData));
+      localStorage.setItem("token", responseData.access_token);
 
-      // 清除密码修改要求
+      // Clear password change requirement
       setNeedsPasswordChange(false);
       localStorage.removeItem("needsPasswordChange");
+
+      // Return success message
+      return responseData.message || "Login successful";
     } catch (error) {
-      throw new Error("Login failed: " + error.message);
+      // If error already has message, throw directly; otherwise wrap error
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error("Login failed: " + String(error));
     }
   };
 
@@ -132,7 +153,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         throw new Error(errorData.message || "Failed to change password");
       }
 
-      // 密码修改成功后，清除密码修改要求
+      // After successful password change, clear password change requirement
       setNeedsPasswordChange(false);
       localStorage.removeItem("needsPasswordChange");
     } catch (error) {
