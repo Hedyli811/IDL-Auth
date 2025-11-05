@@ -70,7 +70,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       // Handle 401 - Password change required
-      if (response.status === 401) {
+      if (response.status === 423) {
         // Set user state but mark that password change is needed
         setUser({
           user_id: responseData.user_id,

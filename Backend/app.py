@@ -125,7 +125,7 @@ def login():
             access_token = create_access_token(identity=user.user_id)
             # check if user needs to change new password
             if user.user_password_change_date and user.user_password_change_date <= datetime.utcnow().date():
-                return jsonify({"message": "Password change required", "user_id": user.user_id, "usersname": user.user_name,"access_token": access_token}), 401  # 或者 401，并附带一个标识
+                return jsonify({"message": "Password change required", "user_id": user.user_id, "usersname": user.user_name,"access_token": access_token}), 423  # 或者 401，并附带一个标识
 
             # Login successful, generate JWT token
 

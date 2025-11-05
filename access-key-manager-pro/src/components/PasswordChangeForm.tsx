@@ -16,12 +16,14 @@ interface PasswordChangeFormProps {
   onPasswordChanged?: () => void;
   isRequired?: boolean; // 是否必须修改密码（403状态）
   isModal?: boolean; // 是否在模态框中显示
+  onCancel?: () => void; // 取消按钮的回调函数
 }
 
 export const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({
   onPasswordChanged,
   isRequired = false,
   isModal = false,
+  onCancel,
 }) => {
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -30,7 +32,7 @@ export const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const { changePassword } = useAuth();
+  const { changePassword, logout } = useAuth();
 
   const validatePassword = (password: string) => {
     // 密码至少8位，包含字母和数字
@@ -233,13 +235,32 @@ export const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({
               )}
             </div>
 
-            <Button
-              type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700"
-              disabled={isLoading || !passwordValidation.isValid || newPassword !== confirmPassword}
-            >
-              {isLoading ? "Changing password..." : "Change Password"}
-            </Button>
+            <div className="space-y-2">
+              <Button
+                type="submit"
+                className="w-full bg-blue-600 hover:bg-blue-700"
+                disabled={isLoading || !passwordValidation.isValid || newPassword !== confirmPassword}
+              >
+                {isLoading ? "Changing password..." : "Change Password"}
+              </Button>
+              {(isRequired || onCancel) && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => {
+                    if (onCancel) {
+                      onCancel();
+                    } else {
+                      logout();
+                    }
+                  }}
+                  disabled={isLoading}
+                >
+                  Exit
+                </Button>
+              )}
+            </div>
           </form>
         </CardContent>
       </Card>
