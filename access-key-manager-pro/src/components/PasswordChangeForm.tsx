@@ -41,16 +41,17 @@ export const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({
     const hasNumber = /\d/.test(password);
     const hasUpperCase = /[A-Z]/.test(password);
     const hasSpecialChar = /[$#!&*%\-_~@^+=]/.test(password);
-    
+
     return {
-      isValid: minLength && hasLetter && hasNumber && hasUpperCase && hasSpecialChar,
+      isValid:
+        minLength && hasLetter && hasNumber && hasUpperCase && hasSpecialChar,
       errors: {
         minLength: !minLength,
         hasLetter: !hasLetter,
         hasNumber: !hasNumber,
         hasUpperCase: !hasUpperCase,
         hasSpecialChar: !hasSpecialChar,
-      }
+      },
     };
   };
 
@@ -63,7 +64,8 @@ export const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({
     if (!passwordValidation.isValid) {
       toast({
         title: "Invalid password",
-        description: "Password must be at least 8 characters long, contain letters and numbers, at least one capital letter, and at least one special character ($#!&*%-_~).",
+        description:
+          "Password must be at least 8 characters long, contain letters and numbers, at least one capital letter, and at least one special character",
         variant: "destructive",
       });
       setIsLoading(false);
@@ -87,12 +89,12 @@ export const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({
         title: "Password changed successfully",
         description: "Your password has been updated successfully.",
       });
-      
+
       // 清空表单
       setOldPassword("");
       setNewPassword("");
       setConfirmPassword("");
-      
+
       // 调用回调函数
       if (onPasswordChanged) {
         onPasswordChanged();
@@ -100,7 +102,8 @@ export const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({
     } catch (error) {
       toast({
         title: "Password change failed",
-        description: error.message || "Failed to change password. Please try again.",
+        description:
+          error.message || "Failed to change password. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -111,171 +114,246 @@ export const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({
   const passwordValidation = validatePassword(newPassword);
 
   const cardContent = (
-    <Card className={`w-full max-w-md shadow-xl ${isModal ? 'shadow-none border-0' : ''}`}>
-        <CardHeader className="text-center space-y-2">
-          <div className="mx-auto w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
-            <Lock className="w-6 h-6 text-white" />
+    <Card
+      className={`w-full max-w-md shadow-xl ${
+        isModal ? "shadow-none border-0" : ""
+      }`}
+    >
+      <CardHeader className="text-center space-y-2">
+        <div className="mx-auto w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
+          <Lock className="w-6 h-6 text-white" />
+        </div>
+        <CardTitle className="text-2xl font-bold text-gray-900">
+          {isRequired ? "Password Change Required" : "Change Password"}
+        </CardTitle>
+        <CardDescription className="text-gray-600">
+          {isRequired
+            ? "Your password has expired. Please change it to continue."
+            : "Update your account password"}
+        </CardDescription>
+        {isRequired && (
+          <div className="flex items-center justify-center space-x-2 text-amber-600 bg-amber-50 p-3 rounded-lg">
+            <AlertCircle className="w-4 h-4" />
+            <span className="text-sm font-medium">
+              Password change is mandatory
+            </span>
           </div>
-          <CardTitle className="text-2xl font-bold text-gray-900">
-            {isRequired ? "Password Change Required" : "Change Password"}
-          </CardTitle>
-          <CardDescription className="text-gray-600">
-            {isRequired 
-              ? "Your password has expired. Please change it to continue."
-              : "Update your account password"
-            }
-          </CardDescription>
-          {isRequired && (
-            <div className="flex items-center justify-center space-x-2 text-amber-600 bg-amber-50 p-3 rounded-lg">
-              <AlertCircle className="w-4 h-4" />
-              <span className="text-sm font-medium">Password change is mandatory</span>
-            </div>
-          )}
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Current Password</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input
-                  type={showOldPassword ? "text" : "password"}
-                  placeholder="Enter current password"
-                  value={oldPassword}
-                  onChange={(e) => setOldPassword(e.target.value)}
-                  className="pl-10 pr-10"
-                  required
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                  onClick={() => setShowOldPassword(!showOldPassword)}
-                >
-                  {showOldPassword ? (
-                    <EyeOff className="h-4 w-4 text-gray-400" />
-                  ) : (
-                    <Eye className="h-4 w-4 text-gray-400" />
-                  )}
-                </Button>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">New Password</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input
-                  type={showNewPassword ? "text" : "password"}
-                  placeholder="Enter new password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="pl-10 pr-10"
-                  required
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                  onClick={() => setShowNewPassword(!showNewPassword)}
-                >
-                  {showNewPassword ? (
-                    <EyeOff className="h-4 w-4 text-gray-400" />
-                  ) : (
-                    <Eye className="h-4 w-4 text-gray-400" />
-                  )}
-                </Button>
-              </div>
-              
-              {/* Password validation feedback */}
-              {newPassword && (
-                <div className="space-y-1 text-xs">
-                  <div className={`flex items-center space-x-1 ${passwordValidation.errors.minLength ? 'text-red-600' : 'text-green-600'}`}>
-                    <div className={`w-1.5 h-1.5 rounded-full ${passwordValidation.errors.minLength ? 'bg-red-600' : 'bg-green-600'}`} />
-                    <span>At least 8 characters</span>
-                  </div>
-                  <div className={`flex items-center space-x-1 ${passwordValidation.errors.hasLetter ? 'text-red-600' : 'text-green-600'}`}>
-                    <div className={`w-1.5 h-1.5 rounded-full ${passwordValidation.errors.hasLetter ? 'bg-red-600' : 'bg-green-600'}`} />
-                    <span>Contains letters</span>
-                  </div>
-                  <div className={`flex items-center space-x-1 ${passwordValidation.errors.hasNumber ? 'text-red-600' : 'text-green-600'}`}>
-                    <div className={`w-1.5 h-1.5 rounded-full ${passwordValidation.errors.hasNumber ? 'bg-red-600' : 'bg-green-600'}`} />
-                    <span>Contains numbers</span>
-                  </div>
-                  <div className={`flex items-center space-x-1 ${passwordValidation.errors.hasUpperCase ? 'text-red-600' : 'text-green-600'}`}>
-                    <div className={`w-1.5 h-1.5 rounded-full ${passwordValidation.errors.hasUpperCase ? 'bg-red-600' : 'bg-green-600'}`} />
-                    <span>Contains at least one capital letter</span>
-                  </div>
-                  <div className={`flex items-center space-x-1 ${passwordValidation.errors.hasSpecialChar ? 'text-red-600' : 'text-green-600'}`}>
-                    <div className={`w-1.5 h-1.5 rounded-full ${passwordValidation.errors.hasSpecialChar ? 'bg-red-600' : 'bg-green-600'}`} />
-                    <span>Contains at least one special character ($#!&*%-_~)</span>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Confirm New Password</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input
-                  type={showConfirmPassword ? "text" : "password"}
-                  placeholder="Confirm new password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="pl-10 pr-10"
-                  required
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                >
-                  {showConfirmPassword ? (
-                    <EyeOff className="h-4 w-4 text-gray-400" />
-                  ) : (
-                    <Eye className="h-4 w-4 text-gray-400" />
-                  )}
-                </Button>
-              </div>
-              {confirmPassword && newPassword !== confirmPassword && (
-                <p className="text-xs text-red-600">Passwords do not match</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
+        )}
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">
+              Current Password
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Input
+                type={showOldPassword ? "text" : "password"}
+                placeholder="Enter current password"
+                value={oldPassword}
+                onChange={(e) => setOldPassword(e.target.value)}
+                className="pl-10 pr-10"
+                required
+              />
               <Button
-                type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700"
-                disabled={isLoading || !passwordValidation.isValid || newPassword !== confirmPassword}
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                onClick={() => setShowOldPassword(!showOldPassword)}
               >
-                {isLoading ? "Changing password..." : "Change Password"}
+                {showOldPassword ? (
+                  <EyeOff className="h-4 w-4 text-gray-400" />
+                ) : (
+                  <Eye className="h-4 w-4 text-gray-400" />
+                )}
               </Button>
-              {(isRequired || onCancel) && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => {
-                    if (onCancel) {
-                      onCancel();
-                    } else {
-                      logout();
-                    }
-                  }}
-                  disabled={isLoading}
-                >
-                  Exit
-                </Button>
-              )}
             </div>
-          </form>
-        </CardContent>
-      </Card>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">
+              New Password
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Input
+                type={showNewPassword ? "text" : "password"}
+                placeholder="Enter new password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="pl-10 pr-10"
+                required
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                onClick={() => setShowNewPassword(!showNewPassword)}
+              >
+                {showNewPassword ? (
+                  <EyeOff className="h-4 w-4 text-gray-400" />
+                ) : (
+                  <Eye className="h-4 w-4 text-gray-400" />
+                )}
+              </Button>
+            </div>
+
+            {/* Password validation feedback */}
+            {newPassword && (
+              <div className="space-y-1 text-xs">
+                <div
+                  className={`flex items-center space-x-1 ${
+                    passwordValidation.errors.minLength
+                      ? "text-red-600"
+                      : "text-green-600"
+                  }`}
+                >
+                  <div
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      passwordValidation.errors.minLength
+                        ? "bg-red-600"
+                        : "bg-green-600"
+                    }`}
+                  />
+                  <span>At least 8 characters</span>
+                </div>
+                <div
+                  className={`flex items-center space-x-1 ${
+                    passwordValidation.errors.hasLetter
+                      ? "text-red-600"
+                      : "text-green-600"
+                  }`}
+                >
+                  <div
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      passwordValidation.errors.hasLetter
+                        ? "bg-red-600"
+                        : "bg-green-600"
+                    }`}
+                  />
+                  <span>Contains letters</span>
+                </div>
+                <div
+                  className={`flex items-center space-x-1 ${
+                    passwordValidation.errors.hasNumber
+                      ? "text-red-600"
+                      : "text-green-600"
+                  }`}
+                >
+                  <div
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      passwordValidation.errors.hasNumber
+                        ? "bg-red-600"
+                        : "bg-green-600"
+                    }`}
+                  />
+                  <span>Contains numbers</span>
+                </div>
+                <div
+                  className={`flex items-center space-x-1 ${
+                    passwordValidation.errors.hasUpperCase
+                      ? "text-red-600"
+                      : "text-green-600"
+                  }`}
+                >
+                  <div
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      passwordValidation.errors.hasUpperCase
+                        ? "bg-red-600"
+                        : "bg-green-600"
+                    }`}
+                  />
+                  <span>Contains at least one capital letter</span>
+                </div>
+                <div
+                  className={`flex items-center space-x-1 ${
+                    passwordValidation.errors.hasSpecialChar
+                      ? "text-red-600"
+                      : "text-green-600"
+                  }`}
+                >
+                  <div
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      passwordValidation.errors.hasSpecialChar
+                        ? "bg-red-600"
+                        : "bg-green-600"
+                    }`}
+                  />
+                  <span>Contains at least one special character </span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">
+              Confirm New Password
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Input
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder="Confirm new password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="pl-10 pr-10"
+                required
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                {showConfirmPassword ? (
+                  <EyeOff className="h-4 w-4 text-gray-400" />
+                ) : (
+                  <Eye className="h-4 w-4 text-gray-400" />
+                )}
+              </Button>
+            </div>
+            {confirmPassword && newPassword !== confirmPassword && (
+              <p className="text-xs text-red-600">Passwords do not match</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Button
+              type="submit"
+              className="w-full bg-blue-600 hover:bg-blue-700"
+              disabled={
+                isLoading ||
+                !passwordValidation.isValid ||
+                newPassword !== confirmPassword
+              }
+            >
+              {isLoading ? "Changing password..." : "Change Password"}
+            </Button>
+            {(isRequired || onCancel) && (
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  if (onCancel) {
+                    onCancel();
+                  } else {
+                    logout();
+                  }
+                }}
+                disabled={isLoading}
+              >
+                Exit
+              </Button>
+            )}
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 
   if (isModal) {
