@@ -35,17 +35,21 @@ export const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({
   const { changePassword, logout } = useAuth();
 
   const validatePassword = (password: string) => {
-    // 密码至少8位，包含字母和数字
+    // 密码至少8位，包含字母和数字，至少一个大写字母，至少一个特殊字符
     const minLength = password.length >= 8;
     const hasLetter = /[a-zA-Z]/.test(password);
     const hasNumber = /\d/.test(password);
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasSpecialChar = /[$#!&*%\-_~@^+=]/.test(password);
     
     return {
-      isValid: minLength && hasLetter && hasNumber,
+      isValid: minLength && hasLetter && hasNumber && hasUpperCase && hasSpecialChar,
       errors: {
         minLength: !minLength,
         hasLetter: !hasLetter,
         hasNumber: !hasNumber,
+        hasUpperCase: !hasUpperCase,
+        hasSpecialChar: !hasSpecialChar,
       }
     };
   };
@@ -59,7 +63,7 @@ export const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({
     if (!passwordValidation.isValid) {
       toast({
         title: "Invalid password",
-        description: "Password must be at least 8 characters long and contain both letters and numbers.",
+        description: "Password must be at least 8 characters long, contain letters and numbers, at least one capital letter, and at least one special character ($#!&*%-_~).",
         variant: "destructive",
       });
       setIsLoading(false);
@@ -199,6 +203,14 @@ export const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({
                   <div className={`flex items-center space-x-1 ${passwordValidation.errors.hasNumber ? 'text-red-600' : 'text-green-600'}`}>
                     <div className={`w-1.5 h-1.5 rounded-full ${passwordValidation.errors.hasNumber ? 'bg-red-600' : 'bg-green-600'}`} />
                     <span>Contains numbers</span>
+                  </div>
+                  <div className={`flex items-center space-x-1 ${passwordValidation.errors.hasUpperCase ? 'text-red-600' : 'text-green-600'}`}>
+                    <div className={`w-1.5 h-1.5 rounded-full ${passwordValidation.errors.hasUpperCase ? 'bg-red-600' : 'bg-green-600'}`} />
+                    <span>Contains at least one capital letter</span>
+                  </div>
+                  <div className={`flex items-center space-x-1 ${passwordValidation.errors.hasSpecialChar ? 'text-red-600' : 'text-green-600'}`}>
+                    <div className={`w-1.5 h-1.5 rounded-full ${passwordValidation.errors.hasSpecialChar ? 'bg-red-600' : 'bg-green-600'}`} />
+                    <span>Contains at least one special character ($#!&*%-_~)</span>
                   </div>
                 </div>
               )}
